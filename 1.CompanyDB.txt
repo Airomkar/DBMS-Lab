@@ -14,3 +14,115 @@ Question 1. Create a db called company consist of the following tables.
               8. List total salary paid to each department 
               9. List details of employee working in ‘Dev’ department 
               10. Update salary of all employees in deptno 10 by 5 %. 
+
+SOLUTION-- 
+            
+Step 1: Create Database
+
+CREATE DATABASE company;
+USE company;
+
+Step 2: Create Tables
+
+CREATE TABLE dept (
+  deptno INT PRIMARY KEY,
+  deptname VARCHAR(30),
+  location VARCHAR(30)
+);
+
+CREATE TABLE emp (
+  eno INT PRIMARY KEY,
+  ename VARCHAR(30),
+  job VARCHAR(20),
+  hiredate DATE,
+  salary DECIMAL(10,2),
+  commission DECIMAL(10,2),
+  deptno INT,
+  FOREIGN KEY (deptno) REFERENCES dept(deptno)
+);
+
+Step 3: Insert Sample Data
+
+INSERT INTO dept VALUES
+(10, 'Sales', 'Mumbai'),
+(20, 'Dev', 'Pune'),
+(30, 'HR', 'Delhi');
+
+INSERT INTO emp VALUES
+(101, 'Isha', 'Salesman', '1981-09-15', 2500, 300, 10),
+(102, 'Amit', 'Manager', '1982-05-20', 3500, NULL, 20),
+(103, 'Imran', 'Clerk', '1981-06-25', 1500, NULL, 20),
+(104, 'Ravi', 'Salesman', '1983-01-10', 2200, 200, 10),
+(105, 'Sneha', 'Analyst', '1980-11-12', 4000, NULL, 20),
+(106, 'Priya', 'HR', '1984-07-15', 1800, NULL, 30);
+
+SELECT * FROM emp;
+SELECT * FROM dept;
+
+🧾 SQL QUERIES
+1. List the maximum salary paid to salesman  
+
+SELECT MAX(salary) AS Max_Salary_Salesman
+FROM emp
+WHERE job = 'Salesman';
+
+2. List name of emp whose name start with ‘I’.
+
+SELECT ename
+FROM emp
+WHERE ename LIKE 'I%';
+
+3. List details of emp who have joined before ’30-sept-81’
+
+SELECT *
+FROM emp
+WHERE hiredate < '1981-09-30';
+
+4. List the emp details in the descending order of their basic salary 
+
+SELECT *
+FROM emp
+ORDER BY salary DESC;
+
+5. List of no. of emp & avg salary for emp in the dept no ‘20’
+
+SELECT COUNT(*) AS No_of_Employees,
+       AVG(salary) AS Avg_Salary
+FROM emp
+WHERE deptno = 20;
+
+6. List the avg salary, minimum salary of the emp hiredatewise for dept no ‘10’. 
+
+SELECT hiredate,
+       AVG(salary) AS Avg_Salary,
+       MIN(salary) AS Min_Salary
+FROM emp
+WHERE deptno = 10
+GROUP BY hiredate;
+
+7. List emp name and its department
+
+SELECT e.ename, d.deptname
+FROM emp e
+JOIN dept d ON e.deptno = d.deptno;
+
+8. List total salary paid to each department 
+
+SELECT d.deptname, SUM(e.salary) AS Total_Salary
+FROM emp e
+JOIN dept d ON e.deptno = d.deptno
+GROUP BY d.deptname;
+
+9. List details of employee working in ‘Dev’ department 
+
+SELECT e.*
+FROM emp e
+JOIN dept d ON e.deptno = d.deptno
+WHERE d.deptname = 'Dev';
+
+10. Update salary of all employees in deptno 10 by 5 %. 
+
+UPDATE emp
+SET salary = salary * 1.05
+WHERE deptno = 10;
+         

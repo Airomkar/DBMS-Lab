@@ -1,1 +1,16 @@
-
+Question 1. Create a db called company consist of the following tables. 
+            1.Emp (eno,ename, job,hiredate,salary,commission,deptno,) 
+            2.dept(deptno,deptname,location) 
+            e_no is  primary key in emp 
+            deptno is  primary key in dept 
+              Solve Queries by SQL 
+              1. List the maximum salary paid to salesman  
+              2. List name of emp whose name start with ‘I’ 
+              3. List details of emp who have joined before ’30-sept-81’ 
+              4. List the emp details in the descending order of their basic salary 
+              5. List of no. of emp & avg salary for emp in the dept no ‘20’ 
+              6. List the avg salary, minimum salary of the emp hiredatewise for dept no ‘10’. 
+              7. List emp name and its department 
+              8. List total salary paid to each department 
+              9. List details of employee working in ‘Dev’ department 
+              10. Update salary of all employees in deptno 10 by 5 %. 

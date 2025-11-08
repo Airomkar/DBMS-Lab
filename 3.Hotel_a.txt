@@ -1,1 +1,195 @@
+Question --  The following tables form part of a database held in a relational DBMS: 
+                  Hotel (HotelNo, Name, City) HotelNo is the primary key 
+                  Room (RoomNo, HotelNo, Type, Price) 
+                  Booking (HotelNo, GuestNo, DateFrom, DateTo, RoomNo) 
+                  Guest (GuestNo, GuestName, GuestAddress) GuestNo is primary key 
+              Room contains room details for each hotel and (HotelNo, RoomNo) forms the 
+              primary key.Booking contains details of the bookings and the primary key comprises 
+              (HotelNo, GuestNo and DateFrom) 
+                  Solve following queries by SQL 
+                  1. List full details of all hotels. 
+                  2. How many hotels are there? 
+                  3. List the price and type of all rooms at the Grosvenor Hotel. 
+                  4. List the number of rooms in each hotel. 
+                  5. Update the price of all rooms by 5%. 
+                  6. List full details of all hotels in London. 
+                  7. What is the average price of a room? 
+                  8. List all guests currently staying at the Grosvenor Hotel. 
+                  9. List the number of rooms in each hotel in London. 
+                  10. Create one view on above database and query it. 
 
+Solution -- 
+
+Step 1: Create Database
+
+CREATE DATABASE hotelDB;
+USE hotelDB;
+
+Step 2: Create Tables
+
+CREATE TABLE Hotel (
+  HotelNo INT PRIMARY KEY,
+  Name VARCHAR(50),
+  City VARCHAR(30)
+);
+
+CREATE TABLE Room (
+  RoomNo INT,
+  HotelNo INT,
+  Type VARCHAR(20),
+  Price DECIMAL(10,2),
+  PRIMARY KEY (HotelNo, RoomNo),
+  FOREIGN KEY (HotelNo) REFERENCES Hotel(HotelNo)
+);
+
+CREATE TABLE Guest (
+  GuestNo INT PRIMARY KEY,
+  GuestName VARCHAR(50),
+  GuestAddress VARCHAR(100)
+);
+
+CREATE TABLE Booking (
+  HotelNo INT,
+  GuestNo INT,
+  DateFrom DATE,
+  DateTo DATE,
+  RoomNo INT,
+  PRIMARY KEY (HotelNo, GuestNo, DateFrom),
+  FOREIGN KEY (HotelNo, RoomNo) REFERENCES Room(HotelNo, RoomNo),
+  FOREIGN KEY (GuestNo) REFERENCES Guest(GuestNo)
+);
+
+Step 3: Insert Sample Data
+
+INSERT INTO Hotel VALUES
+(1, 'Grosvenor Hotel', 'London'),
+(2, 'Sea View Resort', 'Goa'),
+(3, 'Hilltop Inn', 'Pune');
+
+INSERT INTO Room VALUES
+(101, 1, 'Single', 100),
+(102, 1, 'Double', 180),
+(201, 2, 'Single', 90),
+(202, 2, 'Suite', 250),
+(301, 3, 'Double', 150);
+
+INSERT INTO Guest VALUES
+(1, 'Amit Sharma', 'Mumbai'),
+(2, 'Sneha Patil', 'Pune'),
+(3, 'Ravi Kumar', 'Delhi');
+
+INSERT INTO Booking VALUES
+(1, 1, '2025-11-01', '2025-11-07', 101),
+(1, 2, '2025-11-03', '2025-11-05', 102),
+(2, 3, '2025-11-02', '2025-11-08', 202);
+
+🧾 SQL QUERIES AND ANSWERS
+
+1. List full details of all hotels. 
+
+SELECT * FROM Hotel;
+
+2. How many hotels are there? 
+
+SELECT COUNT(*) AS Total_Hotels FROM Hotel;
+
+3. List the price and type of all rooms at the Grosvenor Hotel.
+
+SELECT r.Type, r.Price
+FROM Room r
+JOIN Hotel h ON r.HotelNo = h.HotelNo
+WHERE h.Name = 'Grosvenor Hotel';
+
+4. List the number of rooms in each hotel. 
+
+SELECT h.Name, COUNT(r.RoomNo) AS Total_Rooms
+FROM Hotel h
+JOIN Room r ON h.HotelNo = r.HotelNo
+GROUP BY h.Name;
+
+5. Update the price of all rooms by 5%.
+
+UPDATE Room
+SET Price = Price * 1.05;
+
+    If error occurs because of using "update without Where" - 
+    then use aolution - 
+            SET SQL_SAFE_UPDATES = 0;
+            UPDATE Room
+            SET Price = Price * 1.05;
+            SET SQL_SAFE_UPDATES = 1;
+
+6. List full details of all hotels in London. 
+
+SELECT * FROM Hotel
+WHERE City = 'London';
+
+7. What is the average price of a room?
+
+SELECT AVG(Price) AS Average_Price
+FROM Room;
+
+8. List all guests currently staying at the Grosvenor Hotel.
+
+SELECT g.GuestName, b.DateFrom, b.DateTo
+FROM Guest g
+JOIN Booking b ON g.GuestNo = b.GuestNo
+JOIN Hotel h ON b.HotelNo = h.HotelNo
+WHERE h.Name = 'Grosvenor Hotel'
+  AND CURDATE() BETWEEN b.DateFrom AND b.DateTo;
+
+9. List the number of rooms in each hotel in London. 
+
+SELECT h.Name, COUNT(r.RoomNo) AS No_of_Rooms
+FROM Hotel h
+JOIN Room r ON h.HotelNo = r.HotelNo
+WHERE h.City = 'London'
+GROUP BY h.Name;
+
+10. Create one view on above database and query it.
+
+a) reate the View
+CREATE VIEW HotelRoomDetails AS
+SELECT h.Name AS HotelName, h.City, r.RoomNo, r.Type, r.Price
+FROM Hotel h
+JOIN Room r ON h.HotelNo = r.HotelNo;
+
+b) Query the View
+
+SELECT * FROM HotelRoomDetails
+WHERE City = 'London';
+
+✅ Query Summary Table
+
+| No | Description                   | SQL Concept Used   |
+| -- | ----------------------------- | ------------------ |
+| 1  | Show hotel details            | SELECT *           |
+| 2  | Count hotels                  | COUNT()            |
+| 3  | Rooms and price by hotel name | JOIN, WHERE        |
+| 4  | Count rooms per hotel         | GROUP BY           |
+| 5  | Increase room price           | UPDATE, SET        |
+| 6  | Hotels in specific city       | WHERE              |
+| 7  | Average price                 | AVG()              |
+| 8  | Guests currently staying      | JOIN + DATE filter |
+| 9  | Rooms per London hotel        | JOIN + GROUP BY    |
+| 10 | Create and query a view       | VIEW, SELECT       |
+
+🎤 POSSIBLE ORAL (VIVA) QUESTIONS AND ANSWERS
+
+| **Q.No** | **Question**                                                                             | **Answer**                                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1        | What is a **primary key**?                                                               | A field that uniquely identifies each record in a table.                                                        |
+| 2        | What is a **foreign key**?                                                               | A field in one table that refers to the primary key in another table, maintaining relational integrity.         |
+| 3        | Why do we use **joins** in SQL?                                                          | To combine data from two or more related tables.                                                                |
+| 4        | What is the purpose of the `GROUP BY` clause?                                            | It groups rows that have the same values into summary rows for aggregate functions.                             |
+| 5        | What is the difference between `WHERE` and `HAVING`?                                     | `WHERE` filters rows before grouping; `HAVING` filters after grouping.                                          |
+| 6        | What is a **view**?                                                                      | A virtual table created using a query. It doesn’t store data itself but displays data from other tables.        |
+| 7        | Why are **views** used?                                                                  | To simplify complex queries, enhance security, and limit user access to specific data.                          |
+| 8        | How do you find the **average** of a column?                                             | By using the `AVG()` function.                                                                                  |
+| 9        | What is the use of the `UPDATE` command?                                                 | To modify existing data in a table.                                                                             |
+| 10       | What does `CURDATE()` do in SQL?                                                         | Returns the current date from the system.                                                                       |
+| 11       | What is the default sorting order in SQL?                                                | Ascending order (`ASC`).                                                                                        |
+| 12       | What does `COUNT(*)` return?                                                             | The total number of rows in a table or query result.                                                            |
+| 13       | Can we have multiple foreign keys in a table?                                            | Yes, a table can have multiple foreign keys referencing different tables.                                       |
+| 14       | What is the difference between `INNER JOIN` and `OUTER JOIN`?                            | `INNER JOIN` returns only matching rows; `OUTER JOIN` returns all rows from one table even if there’s no match. |
+| 15       | What happens if you delete a record from the parent table in a foreign key relationship? | It will cause an error unless `ON DELETE CASCADE` is specified.                                                 |

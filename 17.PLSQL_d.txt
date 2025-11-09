@@ -1,0 +1,205 @@
+Qustion -- 17. Cursor (Any Two) 
+a) The bank manager has decided to activate all those accounts which were previously marked as 
+inactive for performing no transaction in last 365 days. Write a PL/SQ block (using implicit 
+cursor) to update the status of account, display an approximate message based on the no. of rows 
+affected by the update.  (Use of %FOUND, %NOTFOUND, %ROWCOUNT) 
+
+b)Write a PL/SQL block of code using parameterized Cursor, that will merge the data available 
+in the newly created table N_RollCall with the data available in the table O_RollCall. If the 
+data in the first table already exist in the second table then that data should be skipped. output: 
+
+c)Write the PL/SQL block for following requirements using parameterized Cursor: Consider 
+table EMP(e_no, d_no, Salary), department wise average salary should be inserted into new 
+table dept_salary(d_no, Avg_salary)
+
+Solution -- 
+🧩 (a) Implicit Cursor – Bank Account Activation
+
+Question Summary
+
+* The bank manager wants to **activate all inactive accounts** that had **no transaction for the last 365 days**.
+* Use **implicit cursor attributes**: `%FOUND`, `%NOTFOUND`, `%ROWCOUNT`.
+
+---
+
+✅ PL/SQL Code
+
+
+DECLARE
+BEGIN
+    -- Update inactive accounts
+    UPDATE Bank_Account
+    SET Status = 'Active'
+    WHERE Status = 'Inactive'
+    AND Last_Transaction_Date <= SYSDATE - 365;
+
+    -- Using implicit cursor attributes
+    IF SQL%NOTFOUND THEN
+        DBMS_OUTPUT.PUT_LINE('No accounts were activated.');
+    ELSIF SQL%FOUND THEN
+        DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' accounts have been activated successfully.');
+    END IF;
+
+    COMMIT;
+END;
+/
+
+
+---
+
+🧠 Explanation
+
+* Implicit cursor is automatically created by Oracle when you run any DML (UPDATE, DELETE, INSERT).
+* `SQL%FOUND` → TRUE if one or more rows are affected.
+* `SQL%NOTFOUND` → TRUE if no rows are affected.
+* `SQL%ROWCOUNT` → Returns the total number of rows updated.
+
+---
+
+🎤 Possible Viva Questions and Answers
+
+| **Question**                         | **Answer**                                                      |
+| ------------------------------------ | --------------------------------------------------------------- |
+| 1. What is an implicit cursor?       | A cursor automatically created by Oracle for DML statements.    |
+| 2. What does `%ROWCOUNT` show?       | It shows how many rows were affected by the last DML operation. |
+| 3. What does `%FOUND` mean?          | It is TRUE if at least one row is affected.                     |
+| 4. What does `%NOTFOUND` mean?       | It is TRUE if no rows are affected.                             |
+| 5. Why use `SYSDATE - 365`?          | To find records where no transaction happened in the past year. |
+| 6. Why is COMMIT used here?          | To make the updates permanent in the database.                  |
+| 7. What type of cursor is used here? | Implicit cursor.                                                |
+
+---
+
+🧩 (b) Parameterized Cursor – Merge RollCall Tables
+
+Question Summary
+
+You have two tables:
+
+1. `O_RollCall` (Old Roll Call)
+2. `N_RollCall` (New Roll Call)
+
+You need to merge data from `N_RollCall` into `O_RollCall`.
+If a record already exists in `O_RollCall`, skip it.
+Use a **parameterized cursor**.
+
+---
+
+✅ PL/SQL Code
+
+
+DECLARE
+    CURSOR c_roll(p_rollno NUMBER) IS
+        SELECT roll_no, name FROM N_RollCall WHERE roll_no = p_rollno;
+
+    v_rollno N_RollCall.roll_no%TYPE;
+    v_name   N_RollCall.name%TYPE;
+    v_count  NUMBER;
+BEGIN
+    FOR rec IN (SELECT roll_no, name FROM N_RollCall) LOOP
+        -- Check if roll number already exists in O_RollCall
+        SELECT COUNT(*) INTO v_count 
+        FROM O_RollCall 
+        WHERE roll_no = rec.roll_no;
+
+        IF v_count = 0 THEN
+            -- Insert into old rollcall
+            INSERT INTO O_RollCall (roll_no, name)
+            VALUES (rec.roll_no, rec.name);
+            DBMS_OUTPUT.PUT_LINE('Inserted Roll No: ' || rec.roll_no);
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Roll No ' || rec.roll_no || ' already exists. Skipped.');
+        END IF;
+    END LOOP;
+
+    COMMIT;
+END;
+/
+
+
+---
+
+🧠 Explanation
+
+* A **parameterized cursor** allows you to pass parameters to a cursor query.
+* It’s used here to handle each roll number dynamically.
+* For each record in `N_RollCall`, check if it exists in `O_RollCall`.
+* If not, insert; otherwise, skip.
+
+---
+
+🎤 Possible Viva Questions and Answers
+
+| **Question**                                     | **Answer**                                                      |
+| ------------------------------------------------ | --------------------------------------------------------------- |
+| 1. What is a parameterized cursor?               | A cursor that accepts parameters when it is opened.             |
+| 2. Why do we use a parameterized cursor?         | To reuse the same cursor with different input values.           |
+| 3. What is the purpose of this program?          | To merge new student records into the existing roll call list.  |
+| 4. What happens if a roll number already exists? | That record is skipped and not inserted again.                  |
+| 5. What is the benefit of using a cursor here?   | It allows us to process each record one by one and apply logic. |
+| 6. Why is COMMIT used?                           | To save the changes permanently in the database.                |
+| 7. How do we know if data already exists?        | By checking with a `COUNT(*)` query before insertion.           |
+
+---
+
+🧩 (c) Parameterized Cursor – Department Wise Average Salary
+
+
+✅ PL/SQL Code
+
+
+DECLARE
+    CURSOR c_emp(p_dno EMP.d_no%TYPE) IS
+        SELECT AVG(salary) AS avg_sal FROM EMP WHERE d_no = p_dno;
+
+    v_dno      EMP.d_no%TYPE;
+    v_avg_sal  NUMBER;
+BEGIN
+    FOR rec IN (SELECT DISTINCT d_no FROM EMP) LOOP
+        OPEN c_emp(rec.d_no);
+        FETCH c_emp INTO v_avg_sal;
+
+        INSERT INTO dept_salary (d_no, avg_salary)
+        VALUES (rec.d_no, v_avg_sal);
+
+        DBMS_OUTPUT.PUT_LINE('Inserted Avg Salary for Department ' || rec.d_no || ' : ' || v_avg_sal);
+
+        CLOSE c_emp;
+    END LOOP;
+
+    COMMIT;
+END;
+/
+
+
+---
+
+🧠 Explanation
+
+* The parameterized cursor `c_emp(p_dno)` calculates the **average salary** of a given department.
+* For each distinct department number, the cursor is opened, fetched, and inserted into `dept_salary`.
+* Each department’s average salary is stored in the new table.
+
+---
+
+🎤 Possible Viva Questions and Answers
+
+| **Question**                                                         | **Answer**                                                                                     |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1. What is the purpose of this program?                              | To calculate and insert the average salary of each department.                                 |
+| 2. Why use a parameterized cursor here?                              | Because we need to process average salary for each department separately.                      |
+| 3. What is the difference between a simple and parameterized cursor? | A parameterized cursor takes parameters when opened; a simple one does not.                    |
+| 4. What does the `DISTINCT d_no` query do?                           | It ensures that each department number is processed only once.                                 |
+| 5. What does the cursor return here?                                 | It returns the average salary of the department passed as a parameter.                         |
+| 6. Why is `COMMIT` used at the end?                                  | To save the inserted data permanently in the `dept_salary` table.                              |
+| 7. How do you pass a parameter to a cursor?                          | By writing it in parentheses when opening or looping the cursor. (e.g., `OPEN c_emp(deptno);`) |
+
+---
+
+🏁 Final Summary
+
+| Part | Cursor Type          | Purpose                                           | Key Concepts Used                  |
+| ---- | -------------------- | ------------------------------------------------- | ---------------------------------- |
+| (a)  | Implicit Cursor      | Activate inactive bank accounts                   | `%FOUND`, `%NOTFOUND`, `%ROWCOUNT` |
+| (b)  | Parameterized Cursor | Merge new RollCall data into old RollCall         | Conditional check + insertion      |
+| (c)  | Parameterized Cursor | Compute and insert department-wise average salary | Aggregation + parameterized cursor |

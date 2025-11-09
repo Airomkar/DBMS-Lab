@@ -85,3 +85,102 @@ INSERT INTO Booking VALUES
 
 1. What is the total revenue per night from all double rooms?
 
+SELECT SUM(Price) AS Total_Revenue_Per_Night
+FROM Room
+WHERE Type = 'Double';
+
+2. List details of all rooms at the Grosvenor Hotel, including the guest name if occupied.
+
+SELECT r.RoomNo, r.Type, r.Price, g.GuestName
+FROM Room r
+JOIN Hotel h ON r.HotelNo = h.HotelNo
+LEFT JOIN Booking b ON r.HotelNo = b.HotelNo AND r.RoomNo = b.RoomNo
+LEFT JOIN Guest g ON b.GuestNo = g.GuestNo
+WHERE h.Name = 'Grosvenor Hotel';
+
+3. What is the average number of bookings for each hotel in April?
+
+SELECT h.Name AS HotelName,
+       COUNT(b.GuestNo) / COUNT(DISTINCT h.HotelNo) AS Avg_Bookings
+FROM Hotel h
+JOIN Booking b ON h.HotelNo = b.HotelNo
+WHERE MONTH(b.DateFrom) = 4
+GROUP BY h.Name;
+
+4. Create index on one field and show its performance in a query.
+
+-- Creating index on Room Type for faster searches
+CREATE INDEX idx_room_type ON Room(Type);
+
+-- Using the index in a query
+EXPLAIN SELECT * FROM Room WHERE Type = 'Double';
+
+5. List full details of all hotels.
+
+SELECT * FROM Hotel;
+
+6. SELECT * FROM Hotel
+
+WHERE City = 'London';
+
+7. Update the price of all rooms by 5%.
+
+UPDATE Room
+SET Price = Price * 1.05;
+
+      If error occurs because of using "update without Where" - 
+      then use aolution - 
+            SET SQL_SAFE_UPDATES = 0;
+            UPDATE Room
+            SET Price = Price * 1.05;
+            SET SQL_SAFE_UPDATES = 1;
+
+8. List the number of rooms in each hotel in London.
+
+SELECT h.Name AS HotelName, COUNT(r.RoomNo) AS No_of_Rooms
+FROM Hotel h
+JOIN Room r ON h.HotelNo = r.HotelNo
+WHERE h.City = 'London'
+GROUP BY h.Name;
+
+9. List all double or family rooms with a price below £40.00 per night, in ascending order of price.
+
+SELECT *
+FROM Room
+WHERE (Type = 'Double' OR Type = 'Family') AND Price < 40.00
+ORDER BY Price ASC;
+
+✅ Query Summary Table
+
+| No | Description                              | SQL Concepts Used                |
+| -- | ---------------------------------------- | -------------------------------- |
+| 1  | Total revenue from double rooms          | `SUM()`, `WHERE`                 |
+| 2  | Room + guest details for Grosvenor Hotel | `JOIN`, `LEFT JOIN`              |
+| 3  | Average bookings per hotel in April      | `COUNT()`, `MONTH()`, `GROUP BY` |
+| 4  | Create and use an index                  | `CREATE INDEX`, `EXPLAIN`        |
+| 5  | Show all hotel details                   | `SELECT *`                       |
+| 6  | Hotels in London                         | `WHERE`                          |
+| 7  | Increase price by 5%                     | `UPDATE`, `SET`                  |
+| 8  | Count rooms in London hotels             | `JOIN`, `GROUP BY`               |
+| 9  | Rooms under £40                          | `WHERE`, `ORDER BY`              |
+
+
+🎤 POSSIBLE ORAL (VIVA) QUESTIONS & ANSWERS
+
+| **Q.No** | **Question**                                                            | **Answer**                                                                                            |
+| -------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 1        | What is a **Primary Key**?                                              | A column or set of columns that uniquely identifies each record in a table.                           |
+| 2        | What is a **Foreign Key**?                                              | A column that refers to the primary key of another table, maintaining referential integrity.          |
+| 3        | What is an **Index** in SQL?                                            | A database structure that improves the speed of data retrieval operations.                            |
+| 4        | Difference between **Clustered** and **Non-clustered Index**?           | Clustered defines the physical order of data; non-clustered is a separate structure pointing to data. |
+| 5        | What does `LEFT JOIN` do?                                               | It returns all rows from the left table and matching rows from the right table.                       |
+| 6        | What is the use of **EXPLAIN** in SQL?                                  | It shows how MySQL executes a query and helps analyze performance.                                    |
+| 7        | What is the use of the **SUM()** function?                              | It calculates the total of numeric values in a column.                                                |
+| 8        | How do you find bookings in April?                                      | Use `MONTH(DateFrom) = 4` condition.                                                                  |
+| 9        | What is the difference between `COUNT()` and `SUM()`?                   | `COUNT()` counts rows, `SUM()` adds up numeric values.                                                |
+| 10       | What is the purpose of **GROUP BY**?                                    | It groups rows that have the same values for aggregate calculations.                                  |
+| 11       | What does `ORDER BY Price ASC` mean?                                    | Sorts the records in ascending order based on price.                                                  |
+| 12       | What is the role of **JOIN** in SQL?                                    | It combines data from two or more related tables based on matching fields.                            |
+| 13       | What is a **subquery**?                                                 | A query inside another query used to compute or filter results dynamically.                           |
+| 14       | What happens when you update a column using `SET Price = Price * 1.05`? | It increases every price value by 5%.                                                                 |
+| 15       | Why do we normalize a database?                                         | To reduce redundancy and improve data integrity.                                                      |

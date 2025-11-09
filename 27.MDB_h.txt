@@ -1,0 +1,78 @@
+Question -- .Create a database called ‘library’, create a collection called ‘books’.find the number of books 
+            having pages less 250 pages and consider ad small book  and greater than 250 consider as Big 
+            book using Map Reduce function.
+
+Solution -- 
+
+Step 1️⃣: Create Database and Collection
+
+use library
+
+db.createCollection("books")
+
+Step 2️⃣: Insert Sample Data
+
+db.books.insertMany([
+  { _id: 1, title: "Java Programming", author: "James Gosling", pages: 180 },
+  { _id: 2, title: "Data Structures", author: "Narsimha Karumanchi", pages: 320 },
+  { _id: 3, title: "Operating Systems", author: "Silberschatz", pages: 275 },
+  { _id: 4, title: "Computer Networks", author: "Andrew Tanenbaum", pages: 220 },
+  { _id: 5, title: "Python Basics", author: "Guido Van Rossum", pages: 150 }
+])
+
+Step 3️⃣: Define the Map Function
+
+var mapBooks = function() {
+  if (this.pages < 250) {
+    emit("Small Book", 1);
+  } else {
+    emit("Big Book", 1);
+  }
+};
+
+Step 4️⃣: Define the Reduce Function
+
+var reduceBooks = function(key, values) {
+  return Array.sum(values);
+};
+
+Step 5️⃣: Execute the MapReduce Function
+
+db.books.mapReduce(
+  mapBooks,
+  reduceBooks,
+  { out: "book_size_count" }
+)
+
+Step 6️⃣: View the Results
+
+db.book_size_count.find().pretty()
+
+Step 7️⃣: Verify
+
+db.books.find().pretty()
+
+🧠 VIVA / ORAL QUESTIONS AND ANSWERS
+
+| **No.** | **Question**                                              | **Answer (Simple & Clear)**                                                                                   |
+| ------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 1       | What is MongoDB?                                          | MongoDB is a NoSQL database that stores data in JSON-like documents.                                          |
+| 2       | What is MapReduce in MongoDB?                             | MapReduce is a data processing technique used to perform aggregation and analysis using JavaScript functions. |
+| 3       | What are the two main functions in MapReduce?             | The **map** function emits key-value pairs; the **reduce** function aggregates them.                          |
+| 4       | What does the `emit()` function do?                       | It outputs key-value pairs from the map function for processing by reduce.                                    |
+| 5       | What does `Array.sum(values)` do?                         | It adds all numeric values in the `values` array.                                                             |
+| 6       | What is the purpose of the `out` option in MapReduce?     | It specifies the name of the output collection where results are stored.                                      |
+| 7       | What is emitted in this program?                          | Keys: “Small Book” and “Big Book”; Values: 1 for each book.                                                   |
+| 8       | How do we categorize books in this program?               | If pages < 250 → “Small Book”, otherwise → “Big Book”.                                                        |
+| 9       | What is the result of this MapReduce operation?           | The count of small and big books.                                                                             |
+| 10      | How do you see the MapReduce result?                      | By running `db.outputCollectionName.find().pretty()`.                                                         |
+| 11      | What type of output does MapReduce produce?               | Documents with `_id` as the key and `value` as the result.                                                    |
+| 12      | Can we store MapReduce results permanently?               | Yes, by specifying `{ out: "collection_name" }`.                                                              |
+| 13      | What is the main use of MapReduce in MongoDB?             | To perform complex aggregation and data analysis.                                                             |
+| 14      | What happens if we don’t use reduce function?             | The emitted values won’t be aggregated (no counting or summarizing).                                          |
+| 15      | What is the difference between Aggregation and MapReduce? | Aggregation is faster for simple tasks; MapReduce is more flexible for custom logic.                          |
+| 16      | What is the advantage of MapReduce?                       | It allows complex operations using JavaScript logic on MongoDB data.                                          |
+| 17      | Can MapReduce handle arrays?                              | Yes, by using `forEach()` inside the map function.                                                            |
+| 18      | How does MapReduce improve performance?                   | It divides tasks into smaller map and reduce parts that can run in parallel.                                  |
+| 19      | What is the default output structure of MapReduce?        | `{ "_id": key, "value": result }`                                                                             |
+| 20      | How do we verify how many documents were processed?       | By checking the output collection or using `db.collection.stats()`                                            |

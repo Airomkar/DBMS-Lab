@@ -1,0 +1,134 @@
+Question --  Create Database DYPIT using MongoDB 
+              Create following Collections 
+                  Teachers(Tname,dno,dname,experience,salary,date_of_joining ) 
+                  Students(Sname,roll_no,class)  
+                  1. Find the information about all teachers 
+                  2. Find the average salary teachers of computer department 
+                  3. Find the minimum and maximum salary of e&TC department teachers 
+                  4. Find the information about all teachers of computer,IT,and E&TC department having 
+                  salary greate than or equl to 10000/- 
+                  5. Find the student information having roll_no = 2 or Sname=xyz 
+                  6. Update the experience of teacher-praveen to 10years, if the entry is not available in 
+                  database consider the entry as new entry. 
+                  7. Update the deparment of all the teachers working in IT deprtment to COMP 
+                  8. find the teachers name and their experience from teachers collection 
+                  9. Using Save() method insert one entry in department collection 
+                  10. Find the total salary  all teachers.
+
+Solution --
+
+1️⃣ Create Database
+
+use DYPIT
+
+2️⃣ Create Collections and Insert Sample Data
+
+db.Teachers.insertMany([
+  { Tname: "Praveen", dno: 1, dname: "COMP", experience: 5, salary: 12000, date_of_joining: "2018-06-10" },
+  { Tname: "Rajesh", dno: 2, dname: "IT", experience: 8, salary: 18000, date_of_joining: "2016-03-14" },
+  { Tname: "Sonal", dno: 3, dname: "E&TC", experience: 6, salary: 15000, date_of_joining: "2019-08-21" },
+  { Tname: "Meena", dno: 4, dname: "COMP", experience: 4, salary: 10000, date_of_joining: "2020-11-01" },
+  { Tname: "Vikas", dno: 5, dname: "IT", experience: 7, salary: 9500, date_of_joining: "2017-05-12" }
+])
+
+db.Students.insertMany([
+  { Sname: "Amit", roll_no: 1, class: "FE" },
+  { Sname: "XYZ", roll_no: 2, class: "SE" },
+  { Sname: "Rohit", roll_no: 3, class: "TE" }
+])
+
+Queries
+
+1️⃣ Find the information about all teachers
+
+db.Teachers.find().pretty()
+
+2️⃣ Find the average salary of Computer department teachers
+
+db.Teachers.aggregate([
+  { $match: { dname: "COMP" } },
+  { $group: { _id: "$dname", avgSalary: { $avg: "$salary" } } }
+])
+
+3️⃣ Find the minimum and maximum salary of E&TC department teachers
+
+db.Teachers.aggregate([
+  { $match: { dname: "E&TC" } },
+  {
+    $group: {
+      _id: "$dname",
+      minSalary: { $min: "$salary" },
+      maxSalary: { $max: "$salary" }
+    }
+  }
+])
+
+4️⃣ Find all teachers of Computer, IT, and E&TC department having salary ≥ 10000
+
+db.Teachers.find({
+  dname: { $in: ["COMP", "IT", "E&TC"] },
+  salary: { $gte: 10000 }
+}).pretty()
+
+5️⃣ Find student info having roll_no = 2 or Sname = "xyz"
+
+db.Students.find({
+  $or: [{ roll_no: 2 }, { Sname: "xyz" }]
+}).pretty()
+
+6️⃣ Update experience of teacher “Praveen” to 10 years
+
+db.Teachers.updateOne(
+  { Tname: "Praveen" },
+  { $set: { experience: 10, dno: 1, dname: "COMP", salary: 12000, date_of_joining: "2018-06-10" } },
+  { upsert: true }
+)
+
+7️⃣ Update department of all teachers working in IT dept to COMP
+
+db.Teachers.updateMany(
+  { dname: "IT" },
+  { $set: { dname: "COMP" } }
+)
+
+8️⃣ Find teacher name and experience only
+
+db.Teachers.find({}, { Tname: 1, experience: 1, _id: 0 })
+
+9️⃣ Insert one entry in Department Collection (Save method replaced)
+
+    ⚠️ Note: save() method is removed in MongoDB 5.0+, so use updateOne() with upsert: true.
+    db.Department.updateOne(
+      { dno: 6 },
+      { $set: { dname: "Mechanical" } },
+      { upsert: true }
+    )
+
+🔟 Find the total salary of all teachers
+
+db.Teachers.aggregate([
+  { $group: { _id: null, totalSalary: { $sum: "$salary" } } }
+])
+
+🎓 VIVA / ORAL QUESTIONS AND ANSWERS
+
+| **No.** | **Question**                                         | **Answer**                                                                                             |
+| ------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 1       | What is MongoDB?                                     | MongoDB is a NoSQL database that stores data in JSON-like documents.                                   |
+| 2       | What is a Collection in MongoDB?                     | A collection is similar to a table in SQL; it stores multiple related documents.                       |
+| 3       | What is a Document?                                  | A document is a record in MongoDB represented in BSON/JSON format.                                     |
+| 4       | What is the use of `find()` method?                  | It retrieves documents from a collection based on specified conditions.                                |
+| 5       | What does `$match` do in aggregation?                | It filters documents based on specified criteria (like WHERE in SQL).                                  |
+| 6       | What does `$group` do in aggregation?                | It groups documents and performs aggregate calculations like sum, avg, min, max.                       |
+| 7       | What does `$avg` mean?                               | It calculates the average of a numeric field.                                                          |
+| 8       | What does `$min` and `$max` mean?                    | `$min` finds the smallest value and `$max` finds the largest value in a group.                         |
+| 9       | What is the `$sum` operator used for?                | It adds numeric values — used to find totals like total salary.                                        |
+| 10      | What does `$in` operator do?                         | It matches if the field’s value is present in the given list of values.                                |
+| 11      | What does `$gte` mean?                               | It means “greater than or equal to”.                                                                   |
+| 12      | What is the use of `updateOne()` and `updateMany()`? | `updateOne()` updates only the first matching document; `updateMany()` updates all matching documents. |
+| 13      | What is `upsert`?                                    | It updates a document if it exists; otherwise, it inserts it as new.                                   |
+| 14      | Why does `save()` not work?                          | Because it was removed in MongoDB 5.0 and replaced by `updateOne()`/`insertOne()`.                     |
+| 15      | What is `aggregate()` used for?                      | To perform operations like sum, average, min, max, etc., on documents.                                 |
+| 16      | How to calculate total salary of teachers?           | By using `aggregate()` with `$group` and `$sum`.                                                       |
+| 17      | What is the output of `pretty()`?                    | It shows results in a well-formatted readable JSON style.                                              |
+| 18      | How to limit query output?                           | Using `.limit(n)` method.                                                                              |

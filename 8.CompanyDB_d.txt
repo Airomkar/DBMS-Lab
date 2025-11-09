@@ -1,0 +1,188 @@
+Question -- Consider the following database 
+                Employee(emp_no,name,skill,pay-rate) eno primary key 
+                Position(posting_no,skill) posting_no primary key 
+                Duty_allocation(posting_no,emp_no,day,shift) 
+            Find the SQL queries for the following: 
+                1. Get the duty allocation details for emp_no 123461 for the month of April 1986. 
+                2. Find the shift details for Employee ‘xyz’ 
+                3. Get employees whose rate of pay is more than or equal to the rate of pay of employee ‘xyz’ 
+                4. Get the names and pay rates of employees with emp_no less than 123460 whose rate of pay is 
+                more than the rate of pay of at least one employee with emp_no greater than or equal to 123460. 
+                5. Find the names of employees who are assigned to all positions that require a Chef’s skill 
+                6 .Find the employees with the lowest pay rate 
+                7 .Get the employee numbers of all employees working on at least two dates. 
+                8 .Get a list of names of employees with the skill of Chef who are assigned a duty 
+                9 .Get a list of employees not assigned a duty 
+                10.Get a count of different employees on each shift
+
+
+Solution --
+
+Step 1: Create Database
+
+CREATE DATABASE employeeDB;
+USE employeeDB;
+
+Step 2: Create Tables
+
+CREATE TABLE Employee (
+  emp_no INT PRIMARY KEY,
+  name VARCHAR(50),
+  skill VARCHAR(30),
+  pay_rate DECIMAL(10,2)
+);
+
+CREATE TABLE Position (
+  posting_no INT PRIMARY KEY,
+  skill VARCHAR(30)
+);
+
+CREATE TABLE Duty_allocation (
+  posting_no INT,
+  emp_no INT,
+  day DATE,
+  shift VARCHAR(20),
+  FOREIGN KEY (posting_no) REFERENCES Position(posting_no),
+  FOREIGN KEY (emp_no) REFERENCES Employee(emp_no)
+);
+
+Step 3: Insert Sample Data
+
+INSERT INTO Employee VALUES
+(123458, 'John', 'Chef', 250.00),
+(123459, 'Meera', 'Waiter', 180.00),
+(123460, 'Amit', 'Chef', 200.00),
+(123461, 'XYZ', 'Manager', 300.00),
+(123462, 'Ravi', 'Chef', 150.00);
+
+INSERT INTO Position VALUES
+(1, 'Chef'),
+(2, 'Waiter'),
+(3, 'Manager');
+
+INSERT INTO Duty_allocation VALUES
+(1, 123458, '1986-04-03', 'Morning'),
+(1, 123460, '1986-04-05', 'Evening'),
+(3, 123461, '1986-04-07', 'Night'),
+(2, 123459, '1986-04-09', 'Morning'),
+(1, 123462, '1986-04-10', 'Night'),
+(1, 123458, '1986-04-12', 'Morning'),
+(2, 123459, '1986-04-13', 'Evening');
+
+🧾 SQL QUERIES AND ANSWERS
+
+1. Get the duty allocation details for emp_no 123461 for the month of April 1986.
+
+SELECT *
+FROM Duty_allocation
+WHERE emp_no = 123461
+  AND MONTH(day) = 4
+  AND YEAR(day) = 1986;
+
+2. Find the shift details for Employee ‘XYZ’.
+
+SELECT d.shift, d.day, d.posting_no
+FROM Duty_allocation d
+JOIN Employee e ON d.emp_no = e.emp_no
+WHERE e.name = 'XYZ';
+
+3. Get employees whose pay rate is more than or equal to that of employee ‘XYZ’.
+
+SELECT e.emp_no, e.name, e.pay_rate
+FROM Employee e
+WHERE e.pay_rate >= (
+  SELECT pay_rate FROM Employee WHERE name = 'XYZ'
+);
+
+4. Get names and pay rates of employees with emp_no < 123460 whose pay_rate is more than at least one employee with emp_no ≥ 123460.
+
+SELECT name, pay_rate
+FROM Employee
+WHERE emp_no < 123460
+  AND pay_rate > ANY (
+    SELECT pay_rate FROM Employee WHERE emp_no >= 123460
+  );
+
+5. Find names of employees assigned to all positions requiring a Chef’s skill.
+
+SELECT e.name
+FROM Employee e
+WHERE e.skill = 'Chef'
+  AND NOT EXISTS (
+    SELECT * FROM Position p
+    WHERE p.skill = 'Chef'
+      AND NOT EXISTS (
+        SELECT * FROM Duty_allocation d
+        WHERE d.emp_no = e.emp_no
+          AND d.posting_no = p.posting_no
+      )
+  );
+
+6. Find the employees with the lowest pay rate.
+
+SELECT name, pay_rate
+FROM Employee
+WHERE pay_rate = (SELECT MIN(pay_rate) FROM Employee);
+
+7. Get employee numbers of all employees working on at least two different dates.
+
+SELECT emp_no
+FROM Duty_allocation
+GROUP BY emp_no
+HAVING COUNT(DISTINCT day) >= 2;
+
+8. Get list of names of employees with skill ‘Chef’ who are assigned a duty.
+
+SELECT DISTINCT e.name
+FROM Employee e
+JOIN Duty_allocation d ON e.emp_no = d.emp_no
+WHERE e.skill = 'Chef';
+
+9. Get a list of employees not assigned a duty.
+
+SELECT e.emp_no, e.name
+FROM Employee e
+WHERE e.emp_no NOT IN (
+  SELECT emp_no FROM Duty_allocation
+);
+
+10. Get a count of different employees on each shift.
+
+SELECT shift, COUNT(DISTINCT emp_no) AS No_of_Employees
+FROM Duty_allocation
+GROUP BY shift;
+
+✅ Summary of Queries
+
+| No | Description                           | Key SQL Concepts Used           |
+| -- | ------------------------------------- | ------------------------------- |
+| 1  | Duty of employee 123461 in April 1986 | `WHERE`, `MONTH()`, `YEAR()`    |
+| 2  | Shift details for 'XYZ'               | `JOIN`, `WHERE`                 |
+| 3  | Employees with pay ≥ XYZ              | `Subquery`, `>=`                |
+| 4  | Pay comparison using ANY              | `ANY`, `Subquery`               |
+| 5  | Employees with all Chef positions     | `NOT EXISTS`, `Nested Subquery` |
+| 6  | Lowest paid employee                  | `MIN()`                         |
+| 7  | Employees with 2+ working days        | `GROUP BY`, `HAVING`            |
+| 8  | Chefs assigned a duty                 | `JOIN`, `DISTINCT`              |
+| 9  | Employees without duty                | `NOT IN`, `Subquery`            |
+| 10 | Employee count per shift              | `GROUP BY`, `COUNT()`           |
+
+🎤 POSSIBLE ORAL (VIVA) QUESTIONS & ANSWERS
+
+| **Q.No** | **Question**                                                            | **Answer**                                                                                     |
+| -------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1        | What is a **Primary Key**?                                              | A unique column or combination of columns that identifies each row uniquely.                   |
+| 2        | What is a **Foreign Key**?                                              | A column that establishes a relationship between two tables.                                   |
+| 3        | What is a **Subquery**?                                                 | A query nested inside another SQL query.                                                       |
+| 4        | What is the difference between `IN` and `ANY`?                          | `IN` checks if a value matches a list; `ANY` compares using conditions (e.g., > ANY).          |
+| 5        | What is `NOT EXISTS` used for?                                          | It checks whether a subquery returns no rows.                                                  |
+| 6        | How do you find the **minimum or maximum** value in SQL?                | Using `MIN()` or `MAX()` functions.                                                            |
+| 7        | What is the use of `GROUP BY`?                                          | To group rows having the same values and apply aggregate functions like `COUNT()` or `SUM()`.  |
+| 8        | What is the difference between `COUNT(*)` and `COUNT(DISTINCT column)`? | The first counts all rows, the second counts only unique values.                               |
+| 9        | What is the purpose of `HAVING`?                                        | To filter groups formed by `GROUP BY`.                                                         |
+| 10       | What is the difference between `INNER JOIN` and `LEFT JOIN`?            | `INNER JOIN` gives matching rows, `LEFT JOIN` gives all from the left table.                   |
+| 11       | What is the use of `DISTINCT`?                                          | Removes duplicate rows from the query result.                                                  |
+| 12       | What are **aggregate functions**?                                       | Functions that perform a calculation on a set of values (`SUM`, `AVG`, `COUNT`, `MAX`, `MIN`). |
+| 13       | What is a **correlated subquery**?                                      | A subquery that refers to columns from the outer query.                                        |
+| 14       | What is a **derived table**?                                            | A temporary table created from a subquery in the `FROM` clause.                                |
+| 15       | How can you find employees not assigned any duty?                       | Using `NOT IN (SELECT emp_no FROM Duty_allocation)` subquery.                                  |

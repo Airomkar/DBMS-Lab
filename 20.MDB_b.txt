@@ -57,3 +57,65 @@ db.Teachers.find({
   salary: { $gte: 25000 }
 }).pretty()
 
+7️⃣ Find student info having roll_no = 25 or Sname = "xyz"
+
+db.Students.find({
+  $or: [{ roll_no: 25 }, { Sname: "xyz" }]
+}).pretty()
+
+8️⃣ Update experience of teacher “Praveen” to 10 years
+
+db.Teachers.updateOne(
+  { Tname: "Praveen" },
+  { $set: { experience: 10, dno: 1, dname: "COMP", salary: 28000, date_of_joining: "2018-06-10" } },
+  { upsert: true }
+)
+
+9️⃣ Update department of all teachers working in IT dept to COMP
+
+db.Teachers.updateMany(
+  { dname: "IT" },
+  { $set: { dname: "COMP" } }
+)
+
+🔟 Find teacher name and experience only
+
+db.Teachers.find({}, { Tname: 1, experience: 1, _id: 0 })
+
+1️⃣1️⃣ Insert one entry in Department Collection (replacement for save())
+
+            ⚠️ save() is removed in MongoDB 5.0+, so use insertOne() or updateOne() with upsert.
+            db.Department.updateOne(
+              { dno: 6 },
+              { $set: { dname: "Mechanical" } },
+              { upsert: true }
+            )
+
+1️⃣3️⃣ Delete all documents from Teachers collection having IT dept
+
+db.Teachers.deleteMany({ dname: "IT" })
+
+1️⃣4️⃣ Display first 5 documents (ascending order) with pretty()
+
+db.Teachers.find().sort({ Tname: 1 }).limit(5).pretty()
+
+🎓 VIVA / ORAL QUESTIONS & ANSWERS
+
+| **Q No.** | **Question**                                     | **Answer**                                                                             |
+| --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| 1         | What is MongoDB?                                 | MongoDB is a NoSQL database that stores data in documents (JSON/BSON format).          |
+| 2         | What is a Collection?                            | A collection is like a table in SQL; it holds a group of related documents.            |
+| 3         | What is a Document?                              | A document is a single record in MongoDB represented in JSON-like structure.           |
+| 4         | Difference between insertOne() and insertMany()? | `insertOne()` inserts one record; `insertMany()` inserts multiple at once.             |
+| 5         | What is pretty()?                                | `pretty()` displays query output in a well-formatted readable style.                   |
+| 6         | What is the $in operator?                        | `$in` checks if a field value matches any value in a given array.                      |
+| 7         | What is the $gte operator?                       | `$gte` means “greater than or equal to”.                                               |
+| 8         | What is the use of limit()?                      | `limit(n)` restricts the number of documents returned to n.                            |
+| 9         | What is updateOne() used for?                    | To update a single matching document in a collection.                                  |
+| 10        | What is updateMany()?                            | It updates all documents that match the condition.                                     |
+| 11        | What is upsert?                                  | It means update if found, or insert if not found.                                      |
+| 12        | Why is save() not working?                       | Because `save()` was removed from MongoDB 5.0 and replaced with update/insert methods. |
+| 13        | What is deleteMany()?                            | It deletes all documents that match the given condition.                               |
+| 14        | What is sort()?                                  | It sorts query results in ascending (1) or descending (-1) order.                      |
+| 15        | What is find()?                                  | It retrieves data from a collection based on given criteria.                           |
+

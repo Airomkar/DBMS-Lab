@@ -1,0 +1,223 @@
+Question -- Create the following tables.    
+                1)PUBLISHER( PID , PNAME ,ADDRESS ,STATE ,PHONE ,EMAILID ); 
+                2)BOOK( ISBN ,BOOK_TITLE , CATEGORY , PRICE , COPYRIGHT_DATE , YEAR ,PAGE_COUNT ,PID ); 
+                3) AUTHOR(AID,ANAME,STATE,CITY ,ZIP,PHONE,URL ) 
+                4) AUTHOR_BOOK(AID,ISBN); 
+                5) REVIEW(RID,ISBN,RATING); 
+            Solve following queries by SQL        
+                1. Retrieve city, phone, url of author whose name is ‘CHETAN BHAGAT’. 
+                2. Retrieve book title, reviewable id and rating of all books. 
+                3. Retrieve book title, price, author name and url for publishers ‘MEHTA’. 
+                4. In a PUBLISHER relation change the phone number of ‘MEHTA’ to 123456 
+                5. Calculate and display the average, maximum, minimum price of each publisher. 
+                6. Delete details of all books having a page count less than 100. 
+                7. Retrieve details of all authors residing in city Pune and whose name begins with character ‘C’. 
+                8. Retrieve details of authors residing in same city as ‘Korth’. 
+                9. Create a procedure to update the value of page count of a book of given ISBN. 
+                10. Create a function that returns the price of book with a given ISBN. 
+
+Solution -- 
+
+Step 1: Create Database
+
+CREATE DATABASE LibraryDB;
+USE LibraryDB;
+
+Step 2: Create Tables
+
+CREATE TABLE Publisher (
+  PID INT PRIMARY KEY,
+  PName VARCHAR(50),
+  Address VARCHAR(100),
+  State VARCHAR(30),
+  Phone VARCHAR(15),
+  EmailID VARCHAR(50)
+);
+
+CREATE TABLE Book (
+  ISBN VARCHAR(20) PRIMARY KEY,
+  Book_Title VARCHAR(100),
+  Category VARCHAR(30),
+  Price DECIMAL(10,2),
+  Copyright_Date DATE,
+  Year INT,
+  Page_Count INT,
+  PID INT,
+  FOREIGN KEY (PID) REFERENCES Publisher(PID)
+);
+
+CREATE TABLE Author (
+  AID INT PRIMARY KEY,
+  AName VARCHAR(50),
+  State VARCHAR(30),
+  City VARCHAR(30),
+  ZIP VARCHAR(10),
+  Phone VARCHAR(15),
+  URL VARCHAR(50)
+);
+
+CREATE TABLE Author_Book (
+  AID INT,
+  ISBN VARCHAR(20),
+  FOREIGN KEY (AID) REFERENCES Author(AID),
+  FOREIGN KEY (ISBN) REFERENCES Book(ISBN)
+);
+
+CREATE TABLE Review (
+  RID INT PRIMARY KEY,
+  ISBN VARCHAR(20),
+  Rating INT,
+  FOREIGN KEY (ISBN) REFERENCES Book(ISBN)
+);
+
+Step 3: Insert Sample Data
+
+INSERT INTO Publisher VALUES
+(1, 'MEHTA', 'Fort, Mumbai', 'Maharashtra', '9876543210', 'mehta@pub.com'),
+(2, 'PEARSON', 'Delhi', 'Delhi', '9988776655', 'pearson@pub.com');
+
+INSERT INTO Book VALUES
+('B101', 'Half Girlfriend', 'Romance', 350.00, '2016-02-10', 2016, 280, 1),
+('B102', 'DBMS Concepts', 'Education', 550.00, '2020-01-05', 2020, 420, 2),
+('B103', 'Revolution 2020', 'Fiction', 400.00, '2018-03-20', 2018, 310, 1),
+('B104', 'Short Stories', 'Fiction', 200.00, '2019-06-18', 2019, 90, 1);
+
+INSERT INTO Author VALUES
+(11, 'CHETAN BHAGAT', 'Maharashtra', 'Mumbai', '400001', '9876500000', 'www.chetanbhagat.com'),
+(12, 'NAVTEJ', 'Maharashtra', 'Pune', '411001', '9876500001', 'www.navtej.com'),
+(13, 'KORTH', 'Delhi', 'Delhi', '110001', '9876500002', 'www.korth.com');
+
+INSERT INTO Author_Book VALUES
+(11, 'B101'),
+(11, 'B103'),
+(12, 'B104'),
+(13, 'B102');
+
+INSERT INTO Review VALUES
+(1, 'B101', 8),
+(2, 'B102', 9),
+(3, 'B103', 7),
+(4, 'B104', 5);
+
+🧾 SQL QUERIES AND ANSWERS
+
+1️⃣ Retrieve city, phone, URL of author whose name is ‘CHETAN BHAGAT’.
+
+SELECT City, Phone, URL
+FROM Author
+WHERE AName = 'CHETAN BHAGAT';
+
+2️⃣ Retrieve book title, review ID and rating of all books.
+
+SELECT b.Book_Title, r.RID, r.Rating
+FROM Book b
+JOIN Review r ON b.ISBN = r.ISBN;
+
+3️⃣ Retrieve book title, price, author name and URL for publisher ‘MEHTA’.
+
+SELECT b.Book_Title, b.Price, a.AName, a.URL
+FROM Book b
+JOIN Author_Book ab ON b.ISBN = ab.ISBN
+JOIN Author a ON ab.AID = a.AID
+JOIN Publisher p ON b.PID = p.PID
+WHERE p.PName = 'MEHTA';
+
+4️⃣ In PUBLISHER relation, change the phone number of ‘MEHTA’ to 123456.
+
+UPDATE Publisher
+SET Phone = '123456'
+WHERE PName = 'MEHTA';
+
+5️⃣ Calculate and display average, maximum, and minimum price of each publisher.
+
+SELECT p.PName,
+       AVG(b.Price) AS Avg_Price,
+       MAX(b.Price) AS Max_Price,
+       MIN(b.Price) AS Min_Price
+FROM Publisher p
+JOIN Book b ON p.PID = b.PID
+GROUP BY p.PName;
+
+6️⃣ Delete details of all books having a page count less than 100.
+
+DELETE FROM Book
+WHERE Page_Count < 100;
+
+7️⃣ Retrieve details of authors residing in city Pune and whose name begins with ‘C’.
+
+SELECT *
+FROM Author
+WHERE City = 'Pune' AND AName LIKE 'C%';
+
+8️⃣ Retrieve details of authors residing in the same city as ‘KORTH’.
+
+SELECT *
+FROM Author
+WHERE City = (
+  SELECT City FROM Author WHERE AName = 'KORTH'
+);
+
+9️⃣ Create a procedure to update the value of page count of a book of given ISBN.
+
+DELIMITER //
+CREATE PROCEDURE UpdatePageCount(IN book_isbn VARCHAR(20), IN new_pages INT)
+BEGIN
+  UPDATE Book
+  SET Page_Count = new_pages
+  WHERE ISBN = book_isbn;
+END //
+DELIMITER ;
+
+CALL UpdatePageCount('B101', 350);
+
+🔟 Create a function that returns the price of a book with a given ISBN.
+
+DELIMITER //
+CREATE FUNCTION GetBookPrice(book_isbn VARCHAR(20))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+  DECLARE book_price DECIMAL(10,2);
+  SELECT Price INTO book_price
+  FROM Book
+  WHERE ISBN = book_isbn;
+  RETURN book_price;
+END //
+DELIMITER ;
+
+SELECT GetBookPrice('B101') AS Book_Price;
+
+✅ Query Summary Table
+
+| No | Description                          | SQL Concept Used                      |
+| -- | ------------------------------------ | ------------------------------------- |
+| 1  | Author info for CHETAN BHAGAT        | `WHERE`                               |
+| 2  | Book titles with reviews             | `JOIN`                                |
+| 3  | Books, prices, and authors for MEHTA | `JOIN`, `WHERE`                       |
+| 4  | Update phone number                  | `UPDATE`, `WHERE`                     |
+| 5  | Average/Max/Min price                | `GROUP BY`, `AVG()`, `MAX()`, `MIN()` |
+| 6  | Delete short books                   | `DELETE`, `WHERE`                     |
+| 7  | Authors in Pune starting with C      | `LIKE`, `WHERE`                       |
+| 8  | Authors in same city as KORTH        | `Subquery`                            |
+| 9  | Procedure to update page count       | `CREATE PROCEDURE`, `UPDATE`          |
+| 10 | Function to get price                | `CREATE FUNCTION`, `RETURN`           |
+
+🎤 POSSIBLE ORAL (VIVA) QUESTIONS & ANSWERS
+
+| **Q.No** | **Question**                                                       | **Answer**                                                                                             |
+| -------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| 1        | What is a **Primary Key**?                                         | A column that uniquely identifies each record in a table.                                              |
+| 2        | What is a **Foreign Key**?                                         | A column that links one table to another to maintain data consistency.                                 |
+| 3        | What is the difference between a **Procedure** and a **Function**? | A procedure performs actions and may not return a value; a function always returns a single value.     |
+| 4        | What is a **JOIN** in SQL?                                         | It is used to combine records from two or more tables based on a related column.                       |
+| 5        | What is the purpose of **GROUP BY**?                               | It groups rows with the same values to apply aggregate functions.                                      |
+| 6        | What does `AVG()`, `MAX()`, and `MIN()` do?                        | They calculate average, maximum, and minimum values respectively.                                      |
+| 7        | What is the use of `LIKE`?                                         | It is used for pattern matching in text fields (e.g., `LIKE 'C%'`).                                    |
+| 8        | What is a **Subquery**?                                            | A query nested inside another query for dynamic filtering.                                             |
+| 9        | What is the use of `DELIMITER` in MySQL?                           | It allows defining multi-line procedures or functions by changing the default command separator.       |
+| 10       | What is a **Deterministic Function**?                              | A function that always returns the same output for the same input.                                     |
+| 11       | What is the difference between `DELETE` and `TRUNCATE`?            | `DELETE` removes specific rows; `TRUNCATE` removes all rows quickly.                                   |
+| 12       | What is the purpose of a **View**?                                 | A virtual table created by a query for easier data access.                                             |
+| 13       | What is the difference between **WHERE** and **HAVING**?           | `WHERE` filters rows before grouping; `HAVING` filters after grouping.                                 |
+| 14       | What is the difference between `IN` and `EXISTS`?                  | `IN` checks for specific values; `EXISTS` checks for existence of rows.                                |
+| 15       | What are **aggregate functions** in SQL?                           | Functions that operate on a set of rows and return a single value (e.g., `SUM()`, `COUNT()`, `AVG()`). |

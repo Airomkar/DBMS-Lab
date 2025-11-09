@@ -1,0 +1,163 @@
+Question -- Create the following tables. Solve  queries by SQL 
+              •  Deposit (actno,cname,bname,amount,adate) 
+              • Branch (bname,city) 
+              • Customers (cname, city) 
+              • Borrow(loanno,cname,bname, amount) 
+          Add primary key and foreign key wherever applicable. 
+          Insert data into the above created tables. 
+          Solve following queries by SQL 
+              1. Display customer name having living city Bombay and branch city Nagpur 
+              2. Display customer name having same living city as their branch city 
+              3. Display customer name who are borrowers as well as depositors and having 
+              living city Nagpur. 
+              4. Display borrower names having deposit amount greater than 1000 and loan 
+              amount greater than 2000 
+              5. Display customer name living in the city where branch of depositor sunil is 
+              located. 
+              6. Create an index on deposit table
+
+Solution -- 
+
+Step 1: Create Database
+
+CREATE DATABASE BankDB;
+USE BankDB;
+
+Step 2: Create Tables
+
+CREATE TABLE Branch (
+  bname VARCHAR(30) PRIMARY KEY,
+  city VARCHAR(30)
+);
+
+CREATE TABLE Customers (
+  cname VARCHAR(30) PRIMARY KEY,
+  city VARCHAR(30)
+);
+
+CREATE TABLE Deposit (
+  actno INT PRIMARY KEY,
+  cname VARCHAR(30),
+  bname VARCHAR(30),
+  amount DECIMAL(10,2),
+  adate DATE,
+  FOREIGN KEY (cname) REFERENCES Customers(cname),
+  FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+  loanno INT PRIMARY KEY,
+  cname VARCHAR(30),
+  bname VARCHAR(30),
+  amount DECIMAL(10,2),
+  FOREIGN KEY (cname) REFERENCES Customers(cname),
+  FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+Step 3: Insert Sample Data
+
+INSERT INTO Branch VALUES
+('Dadar', 'Bombay'),
+('Sitabuldi', 'Nagpur'),
+('M.G. Road', 'Pune');
+
+INSERT INTO Customers VALUES
+('Sunil', 'Nagpur'),
+('Ravi', 'Bombay'),
+('Anil', 'Nagpur'),
+('Sneha', 'Pune'),
+('Amit', 'Nagpur');
+
+INSERT INTO Deposit VALUES
+(101, 'Sunil', 'Dadar', 1500, '1997-01-15'),
+(102, 'Ravi', 'Sitabuldi', 1200, '1997-02-10'),
+(103, 'Anil', 'Sitabuldi', 900, '1997-03-10'),
+(104, 'Sneha', 'M.G. Road', 5000, '1997-04-20'),
+(105, 'Amit', 'Sitabuldi', 3000, '1997-05-25');
+
+INSERT INTO Borrow VALUES
+(201, 'Sunil', 'Sitabuldi', 2500),
+(202, 'Ravi', 'Dadar', 4000),
+(203, 'Amit', 'Sitabuldi', 5000),
+(204, 'Sneha', 'M.G. Road', 2000);
+
+🧾 SQL QUERIES AND ANSWERS
+
+1️⃣ Display customer name having living city Bombay and branch city Nagpur.
+
+SELECT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = 'Bombay' AND b.city = 'Nagpur';
+
+2️⃣ Display customer name having same living city as their branch city.
+
+SELECT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = b.city;
+
+3️⃣ Display customer name who are borrowers as well as depositors and having living city Nagpur.
+
+SELECT DISTINCT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Borrow bo ON c.cname = bo.cname
+WHERE c.city = 'Nagpur';
+
+4️⃣ Display borrower names having deposit amount > 1000 and loan amount > 2000.
+
+SELECT DISTINCT b.cname
+FROM Borrow b
+JOIN Deposit d ON b.cname = d.cname
+WHERE d.amount > 1000 AND b.amount > 2000;
+
+5️⃣ Display customer name living in the city where branch of depositor Sunil is located.
+
+SELECT c.cname
+FROM Customers c
+WHERE c.city = (
+    SELECT b.city
+    FROM Branch b
+    JOIN Deposit d ON b.bname = d.bname
+    WHERE d.cname = 'Sunil'
+);
+
+6️⃣ Create an index on Deposit table.
+
+CREATE INDEX idx_amount ON Deposit(amount);
+
+EXPLAIN SELECT * FROM Deposit WHERE amount > 2000;
+
+✅ Query Summary Table
+
+| No | Description                                     | SQL Concepts Used         |
+| -- | ----------------------------------------------- | ------------------------- |
+| 1  | Customers living in Bombay and branch in Nagpur | `JOIN`, `WHERE`           |
+| 2  | Same city for customer and branch               | `JOIN`, `WHERE`           |
+| 3  | Borrowers and depositors in Nagpur              | `JOIN`, `DISTINCT`        |
+| 4  | Loan > 2000 and Deposit > 1000                  | `JOIN`, `AND`             |
+| 5  | Customers in branch city of Sunil               | `Subquery`, `JOIN`        |
+| 6  | Create index on deposit                         | `CREATE INDEX`, `EXPLAIN` |
+
+🎤 POSSIBLE ORAL (VIVA) QUESTIONS & ANSWERS
+
+| **Q.No** | **Question**                                                           | **Answer**                                                                                           |
+| -------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1        | What is a **Primary Key**?                                             | It uniquely identifies each record in a table.                                                       |
+| 2        | What is a **Foreign Key**?                                             | It establishes a relationship between two tables.                                                    |
+| 3        | Why do we use **JOIN**?                                                | To combine data from multiple tables based on related columns.                                       |
+| 4        | What does the `DISTINCT` keyword do?                                   | Removes duplicate rows from the result set.                                                          |
+| 5        | What is an **INDEX** in SQL?                                           | A performance optimization structure used to speed up searches.                                      |
+| 6        | What is the purpose of the `EXPLAIN` keyword?                          | It shows how SQL executes a query and uses indexes.                                                  |
+| 7        | What are **Aggregate Functions**?                                      | Functions like `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` used for summary operations.                  |
+| 8        | What is a **Subquery**?                                                | A query written inside another query to dynamically filter data.                                     |
+| 9        | What is the difference between `WHERE` and `HAVING`?                   | `WHERE` filters rows before grouping, `HAVING` filters after grouping.                               |
+| 10       | What is the difference between `INNER JOIN` and `LEFT JOIN`?           | `INNER JOIN` returns only matching rows; `LEFT JOIN` returns all rows from the left table.           |
+| 11       | What does the command `CREATE INDEX` do?                               | It creates an index on a column to improve search performance.                                       |
+| 12       | What is the difference between **DELETE**, **DROP**, and **TRUNCATE**? | `DELETE` removes data, `TRUNCATE` removes all rows quickly, and `DROP` removes the table completely. |
+| 13       | What is a **constraint** in SQL?                                       | A rule applied to a table column to maintain data integrity (e.g., PRIMARY KEY, FOREIGN KEY).        |
+| 14       | What does the `AND` operator do in SQL?                                | Combines multiple conditions in the `WHERE` clause; all must be true.                                |
+| 15       | What is normalization?                                                 | The process of organizing data to reduce redundancy and improve consistency.                         |

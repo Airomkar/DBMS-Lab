@@ -12,4 +12,170 @@ operation by displaying appropriate error message. Also the new values expected 
 will be stored in new table Tracking(e_no, salary). 
 
 Solution -- 
+🧩 (a) UPDATE / DELETE Trigger on clientmstr Table
 
+✅ 1️⃣ Row-Level Trigger (FOR EACH ROW)
+
+#### **PL/SQL Code**
+
+
+CREATE OR REPLACE TRIGGER trg_client_audit_row
+AFTER UPDATE OR DELETE
+ON clientmstr
+FOR EACH ROW
+BEGIN
+    IF UPDATING THEN
+        INSERT INTO audit_trade (client_id, name, address, phone, balance, action, action_date)
+        VALUES (:OLD.client_id, :OLD.name, :OLD.address, :OLD.phone, :OLD.balance, 'UPDATE', SYSDATE);
+    ELSIF DELETING THEN
+        INSERT INTO audit_trade (client_id, name, address, phone, balance, action, action_date)
+        VALUES (:OLD.client_id, :OLD.name, :OLD.address, :OLD.phone, :OLD.balance, 'DELETE', SYSDATE);
+    END IF;
+END;
+/
+
+
+---
+
+✅ 2️⃣ Statement-Level Trigger
+
+PL/SQL Code
+
+
+CREATE OR REPLACE TRIGGER trg_client_audit_stmt
+AFTER UPDATE OR DELETE
+ON clientmstr
+DECLARE
+BEGIN
+    IF UPDATING THEN
+        DBMS_OUTPUT.PUT_LINE('Statement Trigger: One or more records updated in CLIENTMSTR.');
+    ELSIF DELETING THEN
+        DBMS_OUTPUT.PUT_LINE('Statement Trigger: One or more records deleted from CLIENTMSTR.');
+    END IF;
+END;
+/
+
+
+---
+
+🧠 Explanation
+
+* **Row trigger** runs **once for every row** being updated or deleted.
+  → Old data (`:OLD`) is inserted into `audit_trade`.
+* **Statement trigger** runs **once for the entire SQL statement**, not per row.
+  → Displays a message or performs summary-level logging.
+
+---
+
+🎤 Possible Viva Questions (with Answers)
+
+| **Question**                                                 | **Answer**                                                                                               |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| 1. What is a trigger?                                        | A trigger is a stored PL/SQL block that automatically executes when a specified event occurs on a table. |
+| 2. What are the two main types of triggers?                  | Row-level trigger and Statement-level trigger.                                                           |
+| 3. What is the difference between row and statement trigger? | Row trigger executes once per row; statement trigger executes once per statement.                        |
+| 4. What does `:OLD` refer to?                                | It refers to the column values before the UPDATE or DELETE operation.                                    |
+| 5. Why do we use audit_trade table?                          | To maintain a history (audit log) of records that were modified or deleted.                              |
+| 6. When does a row-level trigger fire?                       | Once for every row affected by the DML statement.                                                        |
+| 7. What is the purpose of `AFTER` keyword here?              | To ensure that the trigger fires after the main DML action is completed.                                 |
+
+---
+
+🧩 (b) BEFORE Trigger for INSERT / UPDATE on Emp Table
+
+---
+
+✅ **PL/SQL Code
+
+
+CREATE OR REPLACE TRIGGER trg_emp_salary_check
+BEFORE INSERT OR UPDATE
+ON Emp
+FOR EACH ROW
+BEGIN
+    -- Check for salary less than 50,000
+    IF :NEW.salary < 50000 THEN
+        -- Insert the rejected data into Tracking table
+        INSERT INTO Tracking (e_no, salary)
+        VALUES (:NEW.e_no, :NEW.salary);
+
+        -- Raise error to reject the operation
+        RAISE_APPLICATION_ERROR(-20001, 'Error: Salary cannot be less than 50,000!');
+    END IF;
+END;
+/
+
+
+---
+
+🧠 Explanation
+
+* This is a **BEFORE** trigger → executes before the actual INSERT or UPDATE.
+* If `salary < 50000`,
+
+  * The trigger **inserts** the record into `Tracking` table.
+  * Then **raises an application error** to stop the main operation.
+* If salary ≥ 50000, operation proceeds normally.
+
+---
+
+🎤 Possible Viva Questions (with Answers)
+
+| **Question**                                                 | **Answer**                                                                         |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| 1. What type of trigger is this?                             | BEFORE trigger for INSERT and UPDATE operations.                                   |
+| 2. Why use a BEFORE trigger here?                            | To validate data before it is inserted or updated in the table.                    |
+| 3. What happens if salary < 50,000?                          | The operation is rejected and an error message is displayed.                       |
+| 4. What is `RAISE_APPLICATION_ERROR` used for?               | It is used to generate a custom error message and stop the transaction.            |
+| 5. What is the range of custom error codes?                  | From -20000 to -20999.                                                             |
+| 6. What is stored in the Tracking table?                     | The employee number and the rejected salary value.                                 |
+| 7. What is the difference between BEFORE and AFTER triggers? | BEFORE triggers execute before the DML operation; AFTER triggers execute after it. |
+| 8. Can this trigger stop the insert operation?               | Yes, because it raises an error before the DML executes.                           |
+| 9. What does `:NEW` refer to?                                | The new value being inserted or updated.                                           |
+
+---
+
+🏁 Final Summary
+
+| **Part** | **Type**                       | **Purpose**                                                               | **Key Features**                      |
+| -------- | ------------------------------ | ------------------------------------------------------------------------- | ------------------------------------- |
+| (a)      | AFTER UPDATE / DELETE Trigger  | To log old records into `audit_trade` when records are updated or deleted | Uses `:OLD`, row + statement triggers |
+| (b)      | BEFORE INSERT / UPDATE Trigger | To block salary < 50,000 and record it in `Tracking`                      | Uses `:NEW`, raises custom error      |
+
+---
+
+🧾 Extra Tip for Practical Exam
+
+If you need to test these triggers, you can use the following sample table creation (for practice):
+
+
+CREATE TABLE clientmstr (
+    client_id NUMBER,
+    name VARCHAR2(50),
+    address VARCHAR2(100),
+    phone NUMBER,
+    balance NUMBER,
+    status VARCHAR2(10),
+    last_transaction_date DATE
+);
+
+CREATE TABLE audit_trade (
+    client_id NUMBER,
+    name VARCHAR2(50),
+    address VARCHAR2(100),
+    phone NUMBER,
+    balance NUMBER,
+    action VARCHAR2(10),
+    action_date DATE
+);
+
+CREATE TABLE Emp (
+    e_no NUMBER,
+    e_name VARCHAR2(50),
+    salary NUMBER
+);
+
+CREATE TABLE Tracking (
+    e_no NUMBER,
+    salary NUMBER
+);

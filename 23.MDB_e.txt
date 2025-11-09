@@ -1,0 +1,14 @@
+Question -- Create index and fire queries with MongoDB  
+            1. Import zip.json. 
+            2. Create single field, composite and multikey indexes. 
+            3. Fire queries given below again and write your analysis. 
+                1. Display all cities having population above 1600. 
+                2. Display all cities in state “KS”. 
+                3. Display location of city "TIMKEN" 
+
+Solution -- 
+
+Step 1️⃣: Import zip.json file
+
+mongoimport --db DYPIT --collection zipcodes --file zip.json --jsonArray
+

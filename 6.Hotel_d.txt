@@ -1,0 +1,204 @@
+Question --  The following tables form part of a database held in a relational DBMS: 
+                  Hotel (HotelNo, Name, City) 
+                  Room (RoomNo, HotelNo, Type, Price) 
+                  Booking (HotelNo, GuestNo, DateFrom, DateTo, RoomNo) 
+                  Guest (GuestNo, GuestName, GuestAddress) 
+              Solve following queries by SQL 
+                  1. List full details of all hotels. 
+                  2. List full details of all hotels in London. 
+                  3. List all guests currently staying at the Grosvenor Hotel. 
+                  4. List the names and addresses of all guests in London, alphabetically ordered by name. 
+                  5. List the bookings for which no date_to has been specified. 
+                  6. How many hotels are there? 
+                  7. List the rooms that are currently unoccupied at the Grosvenor Hotel. 
+                  8. What is the lost income from unoccupied rooms at each hotel today? 
+                  9. Create index on one of the field and show is performance in query. 
+                  10. Create one view on above database and query it. 
+
+Solution -- 
+
+Step 1: Create Database
+
+CREATE DATABASE hotelDB;
+USE hotelDB;
+
+Step 2: Create Tables
+
+CREATE TABLE Hotel (
+  HotelNo INT PRIMARY KEY,
+  Name VARCHAR(50),
+  City VARCHAR(30)
+);
+
+CREATE TABLE Room (
+  RoomNo INT,
+  HotelNo INT,
+  Type VARCHAR(20),
+  Price DECIMAL(10,2),
+  PRIMARY KEY (HotelNo, RoomNo),
+  FOREIGN KEY (HotelNo) REFERENCES Hotel(HotelNo)
+);
+
+CREATE TABLE Guest (
+  GuestNo INT PRIMARY KEY,
+  GuestName VARCHAR(50),
+  GuestAddress VARCHAR(100)
+);
+
+CREATE TABLE Booking (
+  HotelNo INT,
+  GuestNo INT,
+  DateFrom DATE,
+  DateTo DATE,
+  RoomNo INT,
+  PRIMARY KEY (HotelNo, GuestNo, DateFrom),
+  FOREIGN KEY (HotelNo, RoomNo) REFERENCES Room(HotelNo, RoomNo),
+  FOREIGN KEY (GuestNo) REFERENCES Guest(GuestNo)
+);
+
+Step 3: Insert Sample Data
+
+INSERT INTO Hotel VALUES
+(1, 'Grosvenor Hotel', 'London'),
+(2, 'Sea View Resort', 'Goa'),
+(3, 'Hilltop Inn', 'Pune');
+
+INSERT INTO Room VALUES
+(101, 1, 'Single', 35.00),
+(102, 1, 'Double', 60.00),
+(103, 1, 'Family', 90.00),
+(201, 2, 'Double', 55.00),
+(202, 2, 'Suite', 120.00),
+(301, 3, 'Single', 45.00);
+
+INSERT INTO Guest VALUES
+(1, 'Amit Sharma', 'Mumbai'),
+(2, 'Sneha Patil', 'Pune'),
+(3, 'Ravi Kumar', 'London'),
+(4, 'Priya Mehta', 'Delhi');
+
+INSERT INTO Booking VALUES
+(1, 1, '2025-11-03', '2025-11-07', 101),
+(1, 2, '2025-11-05', '2025-11-09', 102),
+(2, 3, '2025-11-04', NULL, 201);
+
+
+🧾 SQL QUERIES AND ANSWERS
+
+1. List full details of all hotels.
+
+SELECT * FROM Hotel;
+
+2. List full details of all hotels in London.
+
+SELECT * FROM Hotel
+WHERE City = 'London';
+
+3. List all guests currently staying at the Grosvenor Hotel.
+
+SELECT g.GuestName, b.RoomNo, b.DateFrom, b.DateTo
+FROM Guest g
+JOIN Booking b ON g.GuestNo = b.GuestNo
+JOIN Hotel h ON b.HotelNo = h.HotelNo
+WHERE h.Name = 'Grosvenor Hotel'
+  AND CURDATE() BETWEEN b.DateFrom AND IFNULL(b.DateTo, CURDATE());
+
+4. List the names and addresses of all guests in London, alphabetically ordered by name.
+
+SELECT GuestName, GuestAddress
+FROM Guest
+WHERE GuestAddress LIKE '%London%'
+ORDER BY GuestName ASC;
+
+5. List the bookings for which no DateTo has been specified.
+
+SELECT * FROM Booking
+WHERE DateTo IS NULL;
+
+6. How many hotels are there?
+
+SELECT COUNT(*) AS Total_Hotels FROM Hotel;
+
+7. List the rooms that are currently unoccupied at the Grosvenor Hotel.
+
+SELECT r.RoomNo, r.Type, r.Price
+FROM Room r
+JOIN Hotel h ON r.HotelNo = h.HotelNo
+WHERE h.Name = 'Grosvenor Hotel'
+AND r.RoomNo NOT IN (
+  SELECT RoomNo
+  FROM Booking b
+  WHERE b.HotelNo = h.HotelNo
+    AND CURDATE() BETWEEN b.DateFrom AND IFNULL(b.DateTo, CURDATE())
+);
+
+8. What is the lost income from unoccupied rooms at each hotel today?
+
+SELECT h.Name AS HotelName,
+       SUM(r.Price) AS Lost_Income
+FROM Room r
+JOIN Hotel h ON r.HotelNo = h.HotelNo
+WHERE (r.HotelNo, r.RoomNo) NOT IN (
+  SELECT b.HotelNo, b.RoomNo
+  FROM Booking b
+  WHERE CURDATE() BETWEEN b.DateFrom AND IFNULL(b.DateTo, CURDATE())
+)
+GROUP BY h.Name;
+
+9. Create index on one of the fields and show its performance in query.
+
+-- Create index on Room Type
+CREATE INDEX idx_room_type ON Room(Type);
+
+-- Check index usage in a query
+EXPLAIN SELECT * FROM Room WHERE Type = 'Double';
+
+10. Create one view on above database and query it.
+
+Create the view:
+
+CREATE VIEW HotelRoomDetails AS
+SELECT h.Name AS HotelName, h.City, r.RoomNo, r.Type, r.Price
+FROM Hotel h
+JOIN Room r ON h.HotelNo = r.HotelNo;
+
+Query the view:
+
+SELECT * FROM HotelRoomDetails
+WHERE City = 'London';
+
+✅ Query Summary Table
+
+| No | Query Description         | Main SQL Concepts             |
+| -- | ------------------------- | ----------------------------- |
+| 1  | Show all hotels           | `SELECT *`                    |
+| 2  | Hotels in London          | `WHERE`                       |
+| 3  | Guests staying today      | `JOIN`, `CURDATE()`           |
+| 4  | Guests in London          | `WHERE`, `ORDER BY`           |
+| 5  | Bookings with no end date | `IS NULL`                     |
+| 6  | Count hotels              | `COUNT()`                     |
+| 7  | Unoccupied rooms          | `NOT IN`, `SUBQUERY`          |
+| 8  | Lost income               | `SUM()`, `NOT IN`, `GROUP BY` |
+| 9  | Create index              | `CREATE INDEX`, `EXPLAIN`     |
+| 10 | Create & query view       | `CREATE VIEW`, `JOIN`         |
+
+
+🎤 POSSIBLE ORAL (VIVA) QUESTIONS & ANSWERS
+
+| **Q.No** | **Question**                                          | **Answer**                                                                                 |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1        | What is a **Primary Key**?                            | A field that uniquely identifies each record in a table.                                   |
+| 2        | What is a **Foreign Key**?                            | It links one table to another, ensuring referential integrity.                             |
+| 3        | What is the purpose of **JOIN**?                      | To combine data from two or more tables using a related column.                            |
+| 4        | What is the use of `IS NULL`?                         | To check for records where a field has no value.                                           |
+| 5        | What does `CURDATE()` return?                         | It returns the current system date.                                                        |
+| 6        | Difference between `INNER JOIN` and `LEFT JOIN`?      | `INNER JOIN` returns only matches; `LEFT JOIN` returns all rows from the left table.       |
+| 7        | What is an **Index**?                                 | It improves query performance by speeding up data retrieval.                               |
+| 8        | How to check if an index is being used?               | By using the `EXPLAIN` command before a SELECT query.                                      |
+| 9        | What is a **View** in SQL?                            | A virtual table created using a query that displays data from one or more tables.          |
+| 10       | What are the benefits of using a view?                | Simplifies complex queries and improves security.                                          |
+| 11       | What is the difference between `COUNT()` and `SUM()`? | `COUNT()` counts rows, `SUM()` adds numeric values.                                        |
+| 12       | What is the function of `ORDER BY`?                   | It sorts the output in ascending or descending order.                                      |
+| 13       | What is `NOT IN` used for?                            | It filters out records present in another list or subquery.                                |
+| 14       | How can you find unoccupied rooms?                    | By selecting rooms not present in the current booking list.                                |
+| 15       | What does `GROUP BY` do?                              | Groups rows with the same values for use with aggregate functions like `SUM()`, `COUNT()`. |

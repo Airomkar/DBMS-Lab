@@ -1,0 +1,15 @@
+Question -- 18.Trigger  
+a) Write a update, delete trigger on clientmstr table. The System should keep track of the 
+records that ARE BEING updated or deleted. The old value of updated or deleted records 
+should be added in audit_trade table. (separate implementation using both row and statement 
+triggers). 
+
+b) Write a before trigger for Insert, update event considering following requirement: 
+Emp(e_no, e_name, salary) I) Trigger action should be initiated when salary is tried to be 
+inserted is less than Rs. 50,000/- II) Trigger action should be initiated when salary is tried to be 
+updated for value less than Rs. 50,000/- Action should be rejection of update or Insert 
+operation by displaying appropriate error message. Also the new values expected to be inserted 
+will be stored in new table Tracking(e_no, salary). 
+
+Solution -- 
+

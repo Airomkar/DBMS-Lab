@@ -1,0 +1,139 @@
+Question --  Using MapReduce in mongodb solve following queries on given below collection. 
+              { 
+              “id” : 0, 
+              “name” : “Leanne Flinn”, 
+              “email” : “leanne.flinn@unilogic.com”, 
+              “work” :”Unilogic” , 
+              “age” :27 
+              “gender” :”Male” 
+              “Salary” :16660 
+              “hobbies”:”Acrobatics,Photography,Papier-Mache” 
+              } 
+              1. Get the count of Males and Females 
+              2. Count the number of users in each hobby 
+
+Solution -- 
+
+Step 1️⃣: Create Database and Collection
+
+use DYPIT
+
+db.createCollection("users")
+
+Step 2️⃣: Insert Sample Data
+
+db.users.insertMany([
+  {
+    id: 0,
+    name: "Leanne Flinn",
+    email: "leanne.flinn@unilogic.com",
+    work: "Unilogic",
+    age: 27,
+    gender: "Male",
+    Salary: 16660,
+    hobbies: ["Acrobatics", "Photography", "Papier-Mache"]
+  },
+  {
+    id: 1,
+    name: "Sophia Turner",
+    email: "sophia.turner@techwave.com",
+    work: "Techwave",
+    age: 25,
+    gender: "Female",
+    Salary: 25000,
+    hobbies: ["Photography", "Dancing"]
+  },
+  {
+    id: 2,
+    name: "John Mathew",
+    email: "john.mathew@infosys.com",
+    work: "Infosys",
+    age: 29,
+    gender: "Male",
+    Salary: 32000,
+    hobbies: ["Acrobatics", "Cycling"]
+  }
+])
+
+Step 3️⃣: MapReduce Concepts
+
+Query 1️⃣: Get the Count of Males and Females
+
+a) Map Function
+
+var mapGender = function() {
+  emit(this.gender, 1);
+};
+
+b) Reduce Function
+
+var reduceGender = function(key, values) {
+  return Array.sum(values);
+};
+
+c) Run MapReduce
+
+db.users.mapReduce(
+  mapGender,
+  reduceGender,
+  { out: "gender_count" }
+)
+
+d) View the Result
+
+db.gender_count.find().pretty()
+
+Query 2️⃣: Count the Number of Users in Each Hobby
+
+a) Map Function
+
+var mapHobby = function() {
+  if (this.hobbies) {
+    this.hobbies.forEach(function(hobby) {
+      emit(hobby, 1);
+    });
+  }
+};
+
+b) Reduce Function
+
+var reduceHobby = function(key, values) {
+  return Array.sum(values);
+};
+
+c) Run MapReduce
+
+db.users.mapReduce(
+  mapHobby,
+  reduceHobby,
+  { out: "hobby_count" }
+)
+
+d) View the Result
+
+db.hobby_count.find().pretty()
+
+🧠 VIVA / ORAL QUESTIONS AND ANSWERS
+
+| **No.** | **Question**                                                | **Answer (Simple & Clear)**                                                                                                         |
+| ------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1       | What is MapReduce in MongoDB?                               | MapReduce is a data processing framework that allows you to aggregate and analyze large datasets by using map and reduce functions. |
+| 2       | What is the role of the map function?                       | It emits key-value pairs based on data fields for processing.                                                                       |
+| 3       | What is the role of the reduce function?                    | It groups and combines emitted values for each key and performs aggregation (like counting or summing).                             |
+| 4       | What does `emit()` do?                                      | It outputs a key-value pair from the map function for processing by reduce.                                                         |
+| 5       | What is the use of `Array.sum()`?                           | It sums up all numeric values in an array.                                                                                          |
+| 6       | What are the two main stages of MapReduce?                  | Map stage and Reduce stage.                                                                                                         |
+| 7       | What is the output of MapReduce?                            | A new collection containing the aggregated result.                                                                                  |
+| 8       | What is `out` in MapReduce command?                         | It specifies the name of the output collection where results will be stored.                                                        |
+| 9       | Can we apply MapReduce to arrays in MongoDB?                | Yes, using `forEach()` inside the map function for array fields.                                                                    |
+| 10      | How do we view MapReduce results?                           | By running `db.outputCollectionName.find().pretty()`.                                                                               |
+| 11      | Difference between Aggregation and MapReduce?               | Aggregation is faster and simpler; MapReduce is more flexible and scriptable.                                                       |
+| 12      | What is emitted in the gender count example?                | Gender as key (Male/Female) and 1 as value.                                                                                         |
+| 13      | What does `$sum` in aggregation correspond to in MapReduce? | It’s equivalent to `Array.sum()` in the reduce function.                                                                            |
+| 14      | Can MapReduce output be stored permanently?                 | Yes, as a new collection using `{ out: "collectionName" }`.                                                                         |
+| 15      | What is the data type of MapReduce output?                  | Each document contains `_id` as key and `value` as the result.                                                                      |
+| 16      | What is the use of `forEach()` inside the map function?     | It is used to iterate through array fields (like hobbies).                                                                          |
+| 17      | What will happen if the `hobbies` field is missing?         | The map function should handle it using an `if` condition to avoid errors.                                                          |
+| 18      | Can MapReduce be used with any collection?                  | Yes, it works on any collection containing structured JSON documents.                                                               |
+| 19      | What is the output of first MapReduce query here?           | Count of Male = 2, Female = 1.                                                                                                      |
+| 20      | What is the output of second MapReduce query here?          | Count of each hobby (e.g., Acrobatics = 2, Photography = 2, etc.).                                                                  |

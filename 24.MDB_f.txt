@@ -1,0 +1,87 @@
+Question -- Design and Implement following query using MongoDB  
+                1. Create a collection called ‘games’. 
+                2. Add 5 games to the database. Give each document the following properties: name, gametype, rating (out of 100) 
+                3. Write a query that returns all the games 
+                4. Write a query that returns the 3 highest rated games. 
+                5. Update your two favourite games to have two achievements called ‘Game 
+                Master’ and ‘Speed Demon’. 
+                6. Write a query that returns all the games that have both the ‘Game Maser’ and 
+                7. the ‘Speed Demon’ achievements. 
+                8. Write a query that returns only games that have achievements. 
+
+Solution -- 
+
+Step 1️⃣: Create Database and Collection
+
+use DYPIT
+
+db.createCollection("games")
+
+Step 2️⃣: Insert 5 Game Documents
+
+db.games.insertMany([
+  { name: "Call of Duty", gametype: "Action", rating: 95 },
+  { name: "FIFA 23", gametype: "Sports", rating: 90 },
+  { name: "Minecraft", gametype: "Adventure", rating: 92 },
+  { name: "Candy Crush", gametype: "Puzzle", rating: 85 },
+  { name: "Need for Speed", gametype: "Racing", rating: 88 }
+])
+
+Step 3️⃣: Query to Return All Games
+
+db.games.find().pretty()
+
+Step 4️⃣: Query to Return the 3 Highest Rated Games
+
+db.games.find().sort({ rating: -1 }).limit(3).pretty()
+
+Step 5️⃣: Update Two Favourite Games with Achievements
+
+db.games.updateOne(
+  { name: "Call of Duty" },
+  { $set: { achievements: ["Game Master", "Speed Demon"] } }
+)
+
+db.games.updateOne(
+  { name: "Minecraft" },
+  { $set: { achievements: ["Game Master", "Speed Demon"] } }
+)
+
+Step 6️⃣: Query to Return All Games Having BOTH Achievements
+
+db.games.find({
+  achievements: { $all: ["Game Master", "Speed Demon"] }
+}).pretty()
+
+Step 7️⃣: Query to Return Games that Have Achievements
+
+db.games.find({ achievements: { $exists: true } }).pretty()
+
+Step 8️⃣: Verify All Data
+
+db.games.find().pretty()
+
+🧠 VIVA / ORAL QUESTIONS AND ANSWERS
+
+| **No.** | **Question**                                                     | **Answer (Simple & Clear)**                                                       |
+| ------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1       | What is MongoDB?                                                 | MongoDB is a NoSQL database that stores data in JSON-like documents.              |
+| 2       | What is a collection in MongoDB?                                 | A collection is a group of related documents, similar to a table in SQL.          |
+| 3       | What is a document in MongoDB?                                   | A single record in MongoDB represented as a JSON object.                          |
+| 4       | Which command is used to create a collection?                    | `db.createCollection("collection_name")`                                          |
+| 5       | Which command inserts multiple records?                          | `db.collection.insertMany()`                                                      |
+| 6       | How do you sort data in MongoDB?                                 | Using `.sort({ field: 1 or -1 })` → 1 for ascending, -1 for descending.           |
+| 7       | What does `.limit(n)` do?                                        | Limits the number of records returned by the query.                               |
+| 8       | What is `$set` operator?                                         | `$set` adds or updates specific fields in a document.                             |
+| 9       | What is `$all` operator?                                         | `$all` matches arrays that contain all the specified elements.                    |
+| 10      | What is `$exists` operator?                                      | `$exists: true` checks if a field exists in a document.                           |
+| 11      | What is the difference between `updateOne()` and `updateMany()`? | `updateOne()` updates only the first match; `updateMany()` updates all matches.   |
+| 12      | What type of data does MongoDB store?                            | BSON (Binary JSON).                                                               |
+| 13      | How can we display data clearly in MongoDB shell?                | Using `.pretty()` method.                                                         |
+| 14      | What is the output of `find()` without conditions?               | It returns all documents in the collection.                                       |
+| 15      | What are arrays in MongoDB?                                      | A data type that stores multiple values in a single field.                        |
+| 16      | Why are arrays useful in MongoDB?                                | They allow storing lists (like achievements, subjects, etc.) inside one document. |
+| 17      | How can we add a new field to an existing document?              | Using `updateOne()` with `$set`.                                                  |
+| 18      | What is CRUD in MongoDB?                                         | It stands for Create, Read, Update, Delete operations.                            |
+| 19      | What is the use of JSON-like format in MongoDB?                  | It makes data human-readable and easy to manipulate.                              |
+| 20      | How can you check all documents in a collection?                 | Using `db.collection.find().pretty()`                                             |

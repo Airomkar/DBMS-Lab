@@ -1,0 +1,132 @@
+Question -- Consider the following database 
+                Project(project_id,proj_name,chief_arch) , project_id is primary key 
+                Employee(Emp_id,Emp_name) , Emp_id is primary key 
+                Assigned-To(Project_id,Emp_id) 
+            Find the SQL queries for the following: 
+                1. Get the details of employees working on project C353 
+                2. Get employee number of employees working on  project C353 
+                3. Obtain details of employees working on Database project 
+                4. Get details of employees working on both C353 and C354 
+                5. Get employee numbers of employees who do not work on project C453
+
+Solution -- 
+
+Step 1: Create Database
+
+CREATE DATABASE projectDB;
+USE projectDB;
+
+Step 2: Create Tables
+
+CREATE TABLE Project (
+  Project_id VARCHAR(10) PRIMARY KEY,
+  Proj_name VARCHAR(50),
+  Chief_arch VARCHAR(50)
+);
+
+CREATE TABLE Employee (
+  Emp_id INT PRIMARY KEY,
+  Emp_name VARCHAR(50)
+);
+
+CREATE TABLE Assigned_To (
+  Project_id VARCHAR(10),
+  Emp_id INT,
+  FOREIGN KEY (Project_id) REFERENCES Project(Project_id),
+  FOREIGN KEY (Emp_id) REFERENCES Employee(Emp_id)
+);
+
+Step 3: Insert Sample Data
+
+INSERT INTO Project VALUES
+('C353', 'Database Project', 'Amit Sharma'),
+('C354', 'Web App Development', 'Ravi Kumar'),
+('C453', 'AI Research', 'Sneha Patil');
+
+INSERT INTO Employee VALUES
+(101, 'John'),
+(102, 'Meera'),
+(103, 'Ravi'),
+(104, 'Aditi'),
+(105, 'Raj');
+
+INSERT INTO Assigned_To VALUES
+('C353', 101),
+('C353', 102),
+('C353', 103),
+('C354', 103),
+('C354', 104),
+('C453', 105);
+
+🧾 SQL QUERIES AND ANSWERS
+
+ 1. Get the details of employees working on project C353
+
+SELECT e.Emp_id, e.Emp_name
+FROM Employee e
+JOIN Assigned_To a ON e.Emp_id = a.Emp_id
+WHERE a.Project_id = 'C353';
+
+2. Get employee number of employees working on project C353
+
+SELECT COUNT(Emp_id) AS No_of_Employees
+FROM Assigned_To
+WHERE Project_id = 'C353';
+
+3. Obtain details of employees working on Database project
+
+SELECT e.Emp_id, e.Emp_name
+FROM Employee e
+JOIN Assigned_To a ON e.Emp_id = a.Emp_id
+JOIN Project p ON a.Project_id = p.Project_id
+WHERE p.Proj_name = 'Database Project';
+
+4. Get details of employees working on both C353 and C354
+
+SELECT e.Emp_id, e.Emp_name
+FROM Employee e
+WHERE e.Emp_id IN (
+    SELECT Emp_id FROM Assigned_To WHERE Project_id = 'C353'
+)
+AND e.Emp_id IN (
+    SELECT Emp_id FROM Assigned_To WHERE Project_id = 'C354'
+);
+
+5. Get employee numbers of employees who do not work on project C453
+
+SELECT Emp_id
+FROM Employee
+WHERE Emp_id NOT IN (
+    SELECT Emp_id FROM Assigned_To WHERE Project_id = 'C453'
+);
+
+✅ Summary of Queries
+
+| No | Query Description                  | Main SQL Concepts Used  |
+| -- | ---------------------------------- | ----------------------- |
+| 1  | Employees on project C353          | `JOIN`, `WHERE`         |
+| 2  | Count of employees on project C353 | `COUNT()`               |
+| 3  | Employees on "Database Project"    | `JOIN`, `WHERE`         |
+| 4  | Employees on both C353 & C354      | `IN`, `Subquery`, `AND` |
+| 5  | Employees not on project C453      | `NOT IN`, `Subquery`    |
+
+
+🎤 POSSIBLE ORAL (VIVA) QUESTIONS & ANSWERS
+
+| **Q.No** | **Question**                                                     | **Answer**                                                                                                               |
+| -------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1        | What is a **Primary Key**?                                       | A unique identifier for each record in a table.                                                                          |
+| 2        | What is a **Foreign Key**?                                       | A key used to link one table to another by referencing a primary key.                                                    |
+| 3        | Why do we use **JOIN** in SQL?                                   | To combine data from two or more related tables based on a common column.                                                |
+| 4        | What is the difference between **INNER JOIN** and **LEFT JOIN**? | `INNER JOIN` returns only matching records; `LEFT JOIN` returns all records from the left table even if no match exists. |
+| 5        | What does the `IN` operator do?                                  | It checks if a value exists in a list or subquery result.                                                                |
+| 6        | What is the purpose of `NOT IN`?                                 | To exclude records that match a condition in a subquery or list.                                                         |
+| 7        | How does the `COUNT()` function work?                            | It counts the number of rows that meet a specified condition.                                                            |
+| 8        | What is the role of the **Assigned_To** table in this database?  | It connects employees with projects (many-to-many relationship).                                                         |
+| 9        | What is a **Subquery**?                                          | A query inside another query, used to filter or calculate results dynamically.                                           |
+| 10       | What is a **relational database**?                               | A database that organizes data into tables linked by relationships.                                                      |
+| 11       | Can one employee work on multiple projects?                      | Yes, because of the many-to-many relationship through Assigned_To.                                                       |
+| 12       | Why is Project_id made a primary key in Project table?           | To uniquely identify each project.                                                                                       |
+| 13       | What is the difference between `WHERE` and `HAVING`?             | `WHERE` filters rows before grouping; `HAVING` filters after grouping.                                                   |
+| 14       | What does `SELECT DISTINCT` do?                                  | It removes duplicate rows from the result set.                                                                           |
+| 15       | What is the use of database normalization?                       | To reduce data redundancy and ensure data integrity.                                                                     |

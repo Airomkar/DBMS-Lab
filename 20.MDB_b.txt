@@ -1,0 +1,59 @@
+Question -- 1.Create Database DYPIT 
+            2. Create following Collections 
+                Teachers(Tname,dno,dname,experience,salary,date_of_joining ) 
+                Students(Sname,roll_no,class) 
+            3. Find the information about two  teachers 
+            4. Find the information about all teachers of computer department 
+            5. Find the information about all teachers of computer,IT,and e&TC department 
+            6. Find the information about all teachers of computer,IT,and E&TC department having salary 
+            greate than or equl to 25000/- 
+            7. Find the student information having roll_no = 25 or Sname=xyz 
+            8. Update the experience of teacher-praveen to 10years, if the entry is not available in database 
+            consider the entry as new entry. 
+            9. Update the deparment of all the teachers working in IT deprtment to COMP 
+            10. find the teachers name and their experience from teachers collection 
+            11. Using Save() method insert one entry in department collection 
+            13. Delete all the doccuments from teachers collection having IT dept. 
+            14. display with pretty() method, the first 5 documents in teachers collection in ascending order
+
+Solution --
+
+1️⃣ Create Database
+
+use DYPIT
+
+2️⃣ Create Collections and Insert Sample Data
+
+db.Teachers.insertMany([
+  { Tname: "Praveen", dno: 1, dname: "COMP", experience: 5, salary: 28000, date_of_joining: "2018-06-10" },
+  { Tname: "Rajesh", dno: 2, dname: "IT", experience: 8, salary: 30000, date_of_joining: "2016-03-14" },
+  { Tname: "Sonal", dno: 3, dname: "E&TC", experience: 6, salary: 27000, date_of_joining: "2019-08-21" },
+  { Tname: "Meena", dno: 4, dname: "COMP", experience: 4, salary: 23000, date_of_joining: "2020-11-01" },
+  { Tname: "Vikas", dno: 5, dname: "IT", experience: 7, salary: 26000, date_of_joining: "2017-05-12" }
+])
+
+db.Students.insertMany([
+  { Sname: "Amit", roll_no: 21, class: "FE" },
+  { Sname: "XYZ", roll_no: 25, class: "SE" },
+  { Sname: "Rohit", roll_no: 30, class: "TE" }
+])
+
+3️⃣ Find information about two teachers
+
+db.Teachers.find().limit(2).pretty()
+
+4️⃣ Find all teachers of computer department
+
+db.Teachers.find({ dname: "COMP" }).pretty()
+
+5️⃣ Find all teachers of Computer, IT, and E&TC departments
+
+db.Teachers.find({ dname: { $in: ["COMP", "IT", "E&TC"] } }).pretty()
+
+6️⃣ Find teachers of Computer, IT, and E&TC departments having salary ≥ 25000
+
+db.Teachers.find({
+  dname: { $in: ["COMP", "IT", "E&TC"] },
+  salary: { $gte: 25000 }
+}).pretty()
+

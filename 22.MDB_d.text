@@ -1,0 +1,127 @@
+Question -- Create Database DYPIT using MongoDB 
+            Create following Collections 
+            Teachers(Tname,dno,dname,experience,salary,date_of_joining ) 
+            Students(Sname,roll_no,class)  
+                1. Display the department wise average salary 
+                2. display the no. Of employees working in each department 
+                3. Display the department wise total salary of departments having total salary greater than or equals to 50000/- 
+                4. Write the queries using the different operators like max, min. Etc. 
+                5. Create unique index on any field for above given collections 
+                6. Create compound index on any fields for above given collections 
+                7. Show all the indexes created in the database DYPIT 
+                8. Show all the indexes created in above collections.
+
+Solution -- 
+
+Step 1️⃣: Create Database
+
+use DYPIT
+
+Step 2️⃣: Create Collections and Insert Sample Data
+
+db.Teachers.insertMany([
+  { Tname: "Praveen", dno: 1, dname: "COMP", experience: 5, salary: 20000, date_of_joining: "2018-06-10" },
+  { Tname: "Rajesh", dno: 2, dname: "IT", experience: 8, salary: 25000, date_of_joining: "2016-03-14" },
+  { Tname: "Sonal", dno: 3, dname: "E&TC", experience: 6, salary: 18000, date_of_joining: "2019-08-21" },
+  { Tname: "Meena", dno: 1, dname: "COMP", experience: 4, salary: 22000, date_of_joining: "2020-11-01" },
+  { Tname: "Vikas", dno: 2, dname: "IT", experience: 7, salary: 27000, date_of_joining: "2017-05-12" },
+  { Tname: "Riya", dno: 3, dname: "E&TC", experience: 3, salary: 16000, date_of_joining: "2021-02-01" }
+])
+
+db.Students.insertMany([
+  { Sname: "Amit", roll_no: 1, class: "FE" },
+  { Sname: "XYZ", roll_no: 2, class: "SE" },
+  { Sname: "Rohit", roll_no: 3, class: "TE" }
+])
+
+Queries
+
+1️⃣ Display the department-wise average salary
+
+db.Teachers.aggregate([
+  { $group: { _id: "$dname", avgSalary: { $avg: "$salary" } } }
+])
+
+2️⃣ Display the number of employees working in each department
+
+db.Teachers.aggregate([
+  { $group: { _id: "$dname", totalEmployees: { $sum: 1 } } }
+])
+
+3️⃣ Display department-wise total salary of departments having total salary ≥ 50000
+
+db.Teachers.aggregate([
+  { $group: { _id: "$dname", totalSalary: { $sum: "$salary" } } },
+  { $match: { totalSalary: { $gte: 50000 } } }
+])
+
+4️⃣ Queries using different operators like max, min, etc.
+
+(a) Maximum salary of all teachers
+
+db.Teachers.aggregate([
+  { $group: { _id: null, maxSalary: { $max: "$salary" } } }
+])
+
+(b) Minimum salary of all teachers
+
+db.Teachers.aggregate([
+  { $group: { _id: null, minSalary: { $min: "$salary" } } }
+])
+
+(c) Average experience of all teachers
+
+db.Teachers.aggregate([
+  { $group: { _id: null, avgExp: { $avg: "$experience" } } }
+])
+
+5️⃣ Create a unique index on any field (e.g., roll_no in Students collection)
+
+db.Students.createIndex({ roll_no: 1 }, { unique: true })
+
+6️⃣ Create a compound index on any fields (e.g., dname and salary in Teachers collection)
+
+db.Teachers.createIndex({ dname: 1, salary: -1 })
+
+7️⃣ Show all indexes created in the database DYPIT
+
+db.getCollectionNames().forEach(function(name) {
+  print("Indexes for " + name + ":");
+  printjson(db.getCollection(name).getIndexes());
+});
+
+8️⃣ Show all indexes created in above collections
+
+(a) For Teachers collection
+
+db.Teachers.getIndexes()
+
+(b) For Students collection
+
+db.Students.getIndexes()
+
+🧠 VIVA / ORAL QUESTIONS AND ANSWERS
+
+| **No.** | **Question**                                                               | **Answer (Simple & Clear)**                                                                    |
+| ------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1       | What is MongoDB?                                                           | MongoDB is a NoSQL database that stores data in JSON-like documents.                           |
+| 2       | What is Aggregation in MongoDB?                                            | Aggregation is used to process and analyze data (like SUM, AVG, COUNT, etc.).                  |
+| 3       | What is `$group` used for?                                                 | `$group` groups documents by a specific field and performs aggregate operations like sum, avg. |
+| 4       | What is `$sum` used for?                                                   | `$sum` adds up numeric values, used to calculate totals.                                       |
+| 5       | What is `$avg` used for?                                                   | `$avg` calculates the average of numeric fields.                                               |
+| 6       | What is `$min` and `$max`?                                                 | `$min` gives the smallest value; `$max` gives the largest value in the group.                  |
+| 7       | What is `$match` used for?                                                 | `$match` filters documents based on specified conditions (like WHERE in SQL).                  |
+| 8       | What is an Index in MongoDB?                                               | An index improves the speed of query execution, like an index in a book.                       |
+| 9       | What is a Unique Index?                                                    | A unique index ensures that no two documents have the same value in that field.                |
+| 10      | What is a Compound Index?                                                  | An index created on multiple fields to speed up queries using those fields.                    |
+| 11      | What is the syntax to create an index?                                     | `db.collection.createIndex({ fieldname: 1 })`                                                  |
+| 12      | What does “1” and “-1” mean in indexing?                                   | `1` means ascending order, `-1` means descending order.                                        |
+| 13      | How to check all indexes of a collection?                                  | Using `db.collection.getIndexes()`                                                             |
+| 14      | What is the default index in every collection?                             | The `_id` field has a default unique index.                                                    |
+| 15      | Can we create multiple indexes on one collection?                          | Yes, MongoDB supports multiple indexes on different fields.                                    |
+| 16      | What happens if we try to insert duplicate data in a unique indexed field? | MongoDB throws a duplicate key error.                                                          |
+| 17      | Why do we use compound indexes?                                            | To optimize queries that use multiple fields in their condition.                               |
+| 18      | What is the difference between `aggregate()` and `find()`?                 | `find()` retrieves data, while `aggregate()` performs calculations on data.                    |
+| 19      | Can we remove an index?                                                    | Yes, using `db.collection.dropIndex("index_name")`.                                            |
+| 20      | Why do we use indexes?                                                     | To make search operations faster and more efficient.                                           |
+

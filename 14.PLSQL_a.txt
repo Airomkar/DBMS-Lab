@@ -1,0 +1,182 @@
+Question -- a)  Consider table Stud(Roll, Att,Status) 
+Write a PL/SQL block for following requirement and handle the exceptions. Roll no. of student 
+will be entered by user. Attendance of roll no. entered by user will be checked in Stud table. If 
+attendance is less than 75% then display the message “Term not granted” and set the status in 
+stud table as “D”. Otherwise display message “Term granted” and set the status in stud table as 
+“ND” 
+
+b) Write a PL/SQL block for following requirement using user defined exception handling. The 
+account_master table records the current balance for an account, which is updated whenever, any 
+deposits or withdrawals takes place. If the withdrawal attempted is more than the current balance 
+held in the account. The user defined exception is raised, displaying an appropriate message. 
+Write a PL/SQL block for above requirement using user defined exception handling.
+
+Solution -- 
+
+Let’s answer **both questions (a) and (b)** in a complete exam-ready way — including the **PL/SQL code, explanation, and possible oral questions with answers**.
+
+---
+
+✅ (a) PL/SQL Block: Attendance Check (Stud Table)
+
+Table:
+Stud(Roll, Att, Status)
+
+---
+
+Question Logic
+
+* User enters Roll No.
+* Check the attendance (`Att`) from table `Stud`.
+* If attendance < 75% →
+
+  * Display message **“Term not granted”**
+  * Update `Status = 'D'`
+* Else →
+
+  * Display message **“Term granted”**
+  * Update `Status = 'ND'`
+* Handle exception if roll number not found.
+
+
+
+PL/SQL Code
+
+
+DECLARE
+    v_roll   Stud.Roll%TYPE;
+    v_att    Stud.Att%TYPE;
+BEGIN
+    -- Take roll number input from user
+    v_roll := &Enter_Roll_No;
+
+    -- Fetch attendance for given roll number
+    SELECT Att INTO v_att 
+    FROM Stud 
+    WHERE Roll = v_roll;
+
+    -- Check attendance and update status accordingly
+    IF v_att < 75 THEN
+        DBMS_OUTPUT.PUT_LINE('Term not granted');
+        UPDATE Stud SET Status = 'D' WHERE Roll = v_roll;
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Term granted');
+        UPDATE Stud SET Status = 'ND' WHERE Roll = v_roll;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid Roll Number: Record not found.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Some unexpected error occurred: ' || SQLERRM);
+END;
+/
+
+Explanation
+
+* `&Enter_Roll_No` takes roll number from the user.
+* `SELECT INTO` is used to fetch attendance.
+* Conditional logic checks if attendance < 75.
+* Updates the status accordingly.
+* Exception `NO_DATA_FOUND` handles if roll number doesn’t exist.
+
+---
+
+🎤 Possible Oral Questions (with Answers)
+
+| **Question**                                              | **Answer**                                                                   |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1. What is the purpose of this PL/SQL block?              | To check student attendance and decide whether their term is granted or not. |
+| 2. What does the `NO_DATA_FOUND` exception handle?        | It handles cases where the entered roll number is not present in the table.  |
+| 3. Why do we use `SELECT INTO`?                           | To retrieve a single record from a table and store it into a variable.       |
+| 4. What happens if attendance is below 75%?               | Message “Term not granted” is displayed and status is updated to 'D'.        |
+| 5. What does 'ND' mean in this context?                   | 'ND' means “Not Detained” — the term is granted.                             |
+| 6. Why is COMMIT used here?                               | To save the changes made to the table permanently.                           |
+| 7. What is the default exception for a wrong roll number? | `NO_DATA_FOUND` exception.                                                   |
+
+---
+
+✅ (b) PL/SQL Block: Withdrawal Using User Defined Exception
+
+Table:
+`Account_Master(AccNo, CustName, Balance)`
+
+---
+
+Requirement Logic
+
+* Take account number and withdrawal amount from user.
+* Check if withdrawal amount > balance.
+* If yes → raise user-defined exception `Insufficient_Balance`.
+* Otherwise → update balance and display success message.
+
+---
+
+PL/SQL Code
+
+DECLARE
+    v_accno   Account_Master.AccNo%TYPE;
+    v_bal     Account_Master.Balance%TYPE;
+    v_wamt    NUMBER;
+    e_insufficient_balance EXCEPTION;  -- User-defined exception
+BEGIN
+    v_accno := &Enter_Account_Number;
+    v_wamt  := &Enter_Withdrawal_Amount;
+
+    SELECT Balance INTO v_bal 
+    FROM Account_Master 
+    WHERE AccNo = v_accno;
+
+    IF v_wamt > v_bal THEN
+        RAISE e_insufficient_balance;   -- Raise custom exception
+    ELSE
+        UPDATE Account_Master
+        SET Balance = Balance - v_wamt
+        WHERE AccNo = v_accno;
+        DBMS_OUTPUT.PUT_LINE('Withdrawal successful. Remaining balance: ' || (v_bal - v_wamt));
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN e_insufficient_balance THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Withdrawal amount exceeds current balance.');
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid Account Number.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Unexpected error: ' || SQLERRM);
+END;
+/
+
+
+Explanation
+
+* A **user-defined exception** (`e_insufficient_balance`) is declared.
+* It’s **explicitly raised** using `RAISE` when withdrawal > balance.
+* Proper message is displayed.
+* Other exceptions like `NO_DATA_FOUND` are also handled.
+
+---
+
+🎤 Possible Oral Questions (with Answers)
+
+| **Question**                                              | **Answer**                                                                                                      |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1. What is a user-defined exception?                      | It’s an exception created by the programmer for a specific condition not covered by predefined exceptions.      |
+| 2. How do you declare a user-defined exception?           | Using the `EXCEPTION` keyword, e.g., `e_insufficient_balance EXCEPTION;`.                                       |
+| 3. How is the user-defined exception raised?              | Using the `RAISE` statement (e.g., `RAISE e_insufficient_balance;`).                                            |
+| 4. What happens when withdrawal > balance?                | The user-defined exception is raised, and the message “Withdrawal amount exceeds current balance” is displayed. |
+| 5. Why do we use `NO_DATA_FOUND` here?                    | To handle cases where the entered account number doesn’t exist in the table.                                    |
+| 6. What is the purpose of COMMIT?                         | It makes the update permanent in the database after successful withdrawal.                                      |
+| 7. Can a user-defined exception have a custom error code? | Yes, using `PRAGMA EXCEPTION_INIT`, but here it’s not needed.                                                   |
+
+---
+
+💡 Summary Table
+
+| Part | Concept Used                           | Key Feature                      |
+| ---- | -------------------------------------- | -------------------------------- |
+| (a)  | Predefined Exception (`NO_DATA_FOUND`) | Attendance-based decision        |
+| (b)  | User-defined Exception                 | Balance validation in withdrawal |

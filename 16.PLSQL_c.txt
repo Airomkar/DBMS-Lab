@@ -1,0 +1,226 @@
+Question -- 16. Cursor (Any Two) 
+a) The bank manager has decided to activate all those accounts which were previously marked as 
+inactive for performing no transaction in last 365 days. Write a PL/SQ block (using implicit 
+cursor) to update the status of account, display an approximate message based on the no. of rows 
+affected by the update.  (Use of %FOUND, %NOTFOUND, %ROWCOUNT) 
+
+b)Organization has decided to increase the salary of employees by 10% of existing salary, who 
+are having salary less than average salary of organization, Whenever such salary updates takes 
+place, a record for the same is maintained in the increment_salary table. 
+
+c) Write PL/SQL block using explicit cursor for following requirements: College has decided to 
+mark all those students detained (D) who are having attendance less than 75%. Whenever such 
+update takes place, a record for the same is maintained in the D_Stud table. create table 
+stud21(roll number(4), att number(4), status varchar(1)); 
+
+Slolution -- 
+
+🧩 (a) Implicit Cursor — Bank Account Activation
+
+Question Summary
+
+Bank manager wants to activate all accounts that were inactive for the last 365 days.
+Display a message depending on how many rows were updated.
+Use implicit cursor attributes:
+`%FOUND`, `%NOTFOUND`, `%ROWCOUNT`
+
+---
+
+✅ PL/SQL Code
+
+
+DECLARE
+BEGIN
+    -- Update all inactive accounts
+    UPDATE Bank_Account
+    SET Status = 'Active'
+    WHERE Status = 'Inactive'
+    AND Last_Transaction_Date <= SYSDATE - 365;
+
+    -- Check using implicit cursor attributes
+    IF SQL%NOTFOUND THEN
+        DBMS_OUTPUT.PUT_LINE('No accounts were updated.');
+    ELSIF SQL%FOUND THEN
+        DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' accounts have been activated successfully.');
+    END IF;
+
+    COMMIT;
+END;
+/
+
+
+---
+
+🧠 Explanation
+
+* This block uses **implicit cursor** — because `UPDATE` automatically creates an internal cursor.
+* `%ROWCOUNT` → gives number of rows updated
+* `%FOUND` → TRUE if rows updated
+* `%NOTFOUND` → TRUE if no rows updated
+
+---
+
+🎤 Oral Viva Questions (with Answers)
+
+| **Question**                                        | **Answer**                                                                    |
+| --------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1. What is an implicit cursor?                      | A cursor automatically created by Oracle when an SQL statement is executed.   |
+| 2. Which attributes are used with implicit cursors? | `%FOUND`, `%NOTFOUND`, `%ROWCOUNT`, `%ISOPEN`.                                |
+| 3. What does `%ROWCOUNT` return?                    | The number of rows affected by the last DML operation.                        |
+| 4. When is `%FOUND` true?                           | When one or more rows are affected by the SQL statement.                      |
+| 5. What happens if no rows are updated?             | `%NOTFOUND` becomes true and message “No accounts were updated” is displayed. |
+| 6. Why do we use `SYSDATE - 365`?                   | To check accounts with no transactions in the last 365 days.                  |
+| 7. Why is `COMMIT` used?                            | To save the changes made by the `UPDATE` statement permanently.               |
+
+---
+
+🧩 (b) Implicit Cursor — Salary Increment Below Average
+
+Question Summary
+
+Organization wants to increase salary by **10%** for employees whose salary is **less than the average salary** of the organization.
+Whenever salary is increased, insert a record in the `increment_salary` table.
+
+---
+
+✅ PL/SQL Code
+
+
+DECLARE
+    v_avg_sal NUMBER;
+BEGIN
+    -- Find average salary
+    SELECT AVG(salary) INTO v_avg_sal FROM Employee;
+
+    -- Update employees having salary less than average
+    UPDATE Employee
+    SET salary = salary + (salary * 0.10)
+    WHERE salary < v_avg_sal;
+
+    -- Insert record into increment_salary table for each updated row
+    INSERT INTO increment_salary (emp_id, inc_date, new_salary)
+    SELECT emp_id, SYSDATE, salary FROM Employee WHERE salary < v_avg_sal * 1.10;
+
+    -- Display number of employees updated
+    IF SQL%FOUND THEN
+        DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' employees got salary increment.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('No employees got increment.');
+    END IF;
+
+    COMMIT;
+END;
+/
+
+
+---
+
+🧠 Explanation
+
+* Uses **implicit cursor attributes** with UPDATE.
+* First, average salary is calculated.
+* All employees with salary < average get 10% increment.
+* Details stored in another table `increment_salary`.
+
+---
+
+🎤 Oral Viva Questions (with Answers)
+
+| **Question**                                         | **Answer**                                                                               |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 1. What is the purpose of this program?              | To give a 10% salary increase to employees earning less than the organization’s average. |
+| 2. Which SQL clause is used to find average salary?  | `SELECT AVG(salary)`                                                                     |
+| 3. What does `%FOUND` represent here?                | True if any employee’s salary was updated.                                               |
+| 4. Why maintain a separate `increment_salary` table? | To keep a record of salary changes for auditing and tracking.                            |
+| 5. What is the function of `COMMIT`?                 | To permanently save the updated salary and insertion into the database.                  |
+| 6. What kind of cursor is used here?                 | Implicit cursor (because no cursor is declared explicitly).                              |
+
+---
+
+🧩 (c) Explicit Cursor — Student Detention (Attendance < 75%)
+
+Given Table
+
+
+CREATE TABLE Stud21 (
+    Roll NUMBER(4),
+    Att NUMBER(4),
+    Status VARCHAR2(1)
+);
+```
+
+---
+
+Question Summary
+
+* College wants to mark students as **Detained (‘D’)** if attendance < 75.
+* When updated, insert their record into **D_Stud** table.
+* Use an **explicit cursor**.
+
+---
+
+✅ PL/SQL Code
+
+
+DECLARE
+    CURSOR c1 IS 
+        SELECT Roll, Att FROM Stud21 WHERE Att < 75;
+
+    v_roll Stud21.Roll%TYPE;
+    v_att  Stud21.Att%TYPE;
+BEGIN
+    OPEN c1;
+    LOOP
+        FETCH c1 INTO v_roll, v_att;
+        EXIT WHEN c1%NOTFOUND;
+
+        -- Update status in main table
+        UPDATE Stud21
+        SET Status = 'D'
+        WHERE Roll = v_roll;
+
+        -- Insert record into detained student table
+        INSERT INTO D_Stud(Roll, Att, Status)
+        VALUES (v_roll, v_att, 'D');
+
+        DBMS_OUTPUT.PUT_LINE('Student Roll No. ' || v_roll || ' marked as Detained.');
+    END LOOP;
+
+    CLOSE c1;
+    COMMIT;
+END;
+/
+
+---
+
+🧠 Explanation
+
+* **Explicit cursor `c1`** is defined to select students with attendance < 75.
+* Each fetched record is processed in the loop.
+* Status is updated, and record is also stored in another table (`D_Stud`).
+* `%NOTFOUND` ensures the loop ends when no more records.
+
+---
+
+🎤 Oral Viva Questions (with Answers)
+
+| **Question**                                             | **Answer**                                                            |
+| -------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1. What is an explicit cursor?                           | A cursor declared by the user to process multiple records one-by-one. |
+| 2. Which statements are used with explicit cursors?      | `OPEN`, `FETCH`, `CLOSE`.                                             |
+| 3. What does `%NOTFOUND` mean?                           | It returns TRUE when no more rows are left to fetch.                  |
+| 4. Why use a cursor here?                                | To process multiple student records individually and perform updates. |
+| 5. What happens to students with attendance ≥ 75%?       | They remain unchanged (not detained).                                 |
+| 6. What is the purpose of inserting into `D_Stud` table? | To maintain a record of all detained students separately.             |
+| 7. Why do we use `DBMS_OUTPUT.PUT_LINE`?                 | To display a confirmation message for each updated record.            |
+| 8. What is the final step after processing the cursor?   | `CLOSE` the cursor and `COMMIT` the changes.                          |
+
+---
+
+🏁 Quick Summary
+
+| Sub | Cursor Type     | Purpose                              | Key Feature                               |
+| --- | --------------- | ------------------------------------ | ----------------------------------------- |
+| (a) | Implicit Cursor | Activate inactive bank accounts      | Uses `%FOUND`, `%NOTFOUND`, `%ROWCOUNT`   |
+| (b) | Implicit Cursor | Increase salary < average            | Uses aggregate and inserts into log table |
+| (c) | Explicit Cursor | Detain students with <75% attendance | Uses `OPEN`, `FETCH`, `CLOSE`             |

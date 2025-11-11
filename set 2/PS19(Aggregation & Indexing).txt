@@ -1,0 +1,254 @@
+# 🧾 **Problem Statement 19 — (Aggregation & Indexing using MongoDB)**
+
+---
+
+## 🎯 **Objective:**
+
+To perform **aggregation** and **indexing** operations on a collection named `Movies_Data`.
+
+---
+
+## 💻 **Step 1: Create Database and Collection**
+
+```javascript
+use EntertainmentDB
+db.createCollection("Movies_Data")
+```
+
+---
+
+## 💻 **Step 2: Insert Sample Documents**
+
+```javascript
+db.Movies_Data.insertMany([
+  { Movie_ID: 1, Movie_Name: "Inception", Director: "Christopher Nolan", Genre: "Sci-Fi", BoxOfficeCollection: 850 },
+  { Movie_ID: 2, Movie_Name: "Interstellar", Director: "Christopher Nolan", Genre: "Sci-Fi", BoxOfficeCollection: 900 },
+  { Movie_ID: 3, Movie_Name: "Dunkirk", Director: "Christopher Nolan", Genre: "War", BoxOfficeCollection: 700 },
+  { Movie_ID: 4, Movie_Name: "Titanic", Director: "James Cameron", Genre: "Romance", BoxOfficeCollection: 2200 },
+  { Movie_ID: 5, Movie_Name: "Avatar", Director: "James Cameron", Genre: "Sci-Fi", BoxOfficeCollection: 2800 },
+  { Movie_ID: 6, Movie_Name: "Terminator", Director: "James Cameron", Genre: "Action", BoxOfficeCollection: 1200 },
+  { Movie_ID: 7, Movie_Name: "Jurassic Park", Director: "Steven Spielberg", Genre: "Adventure", BoxOfficeCollection: 1000 },
+  { Movie_ID: 8, Movie_Name: "E.T.", Director: "Steven Spielberg", Genre: "Sci-Fi", BoxOfficeCollection: 750 },
+  { Movie_ID: 9, Movie_Name: "Gladiator", Director: "Ridley Scott", Genre: "Action", BoxOfficeCollection: 900 },
+  { Movie_ID: 10, Movie_Name: "Alien", Director: "Ridley Scott", Genre: "Sci-Fi", BoxOfficeCollection: 950 }
+])
+```
+
+✅ **10 sample movie records inserted successfully.**
+
+---
+
+# 🧩 **1️⃣ Display how many Movies are directed by each “Director”**
+
+### 💻 **Query**
+
+```javascript
+db.Movies_Data.aggregate([
+  { $group: { _id: "$Director", Total_Movies: { $sum: 1 } } }
+])
+```
+
+### ✅ **Output**
+
+```json
+[
+  { "_id": "Christopher Nolan", "Total_Movies": 3 },
+  { "_id": "James Cameron", "Total_Movies": 3 },
+  { "_id": "Steven Spielberg", "Total_Movies": 2 },
+  { "_id": "Ridley Scott", "Total_Movies": 2 }
+]
+```
+
+### ✅ **Explanation:**
+
+* `$group` groups documents by **Director**.
+* `$sum: 1` counts the number of movies per director.
+
+---
+
+# 🧩 **2️⃣ Display list of Movies with the highest BoxOfficeCollection in each Genre**
+
+### 💻 **Query**
+
+```javascript
+db.Movies_Data.aggregate([
+  { $sort: { BoxOfficeCollection: -1 } },
+  { $group: { _id: "$Genre", 
+              Movie_Name: { $first: "$Movie_Name" }, 
+              Director: { $first: "$Director" }, 
+              Highest_Collection: { $first: "$BoxOfficeCollection" } } }
+])
+```
+
+### ✅ **Output**
+
+```json
+[
+  { "_id": "Romance", "Movie_Name": "Titanic", "Director": "James Cameron", "Highest_Collection": 2200 },
+  { "_id": "Sci-Fi", "Movie_Name": "Avatar", "Director": "James Cameron", "Highest_Collection": 2800 },
+  { "_id": "War", "Movie_Name": "Dunkirk", "Director": "Christopher Nolan", "Highest_Collection": 700 },
+  { "_id": "Action", "Movie_Name": "Terminator", "Director": "James Cameron", "Highest_Collection": 1200 },
+  { "_id": "Adventure", "Movie_Name": "Jurassic Park", "Director": "Steven Spielberg", "Highest_Collection": 1000 }
+]
+```
+
+### ✅ **Explanation:**
+
+* `$sort` arranges movies in descending order of **BoxOfficeCollection**.
+* `$group` then picks the **first document** per Genre (highest collection).
+
+---
+
+# 🧩 **3️⃣ Display list of Movies with the highest BoxOfficeCollection in each Genre in ascending order**
+
+### 💻 **Query**
+
+```javascript
+db.Movies_Data.aggregate([
+  { $sort: { BoxOfficeCollection: -1 } },
+  { $group: { _id: "$Genre", 
+              Movie_Name: { $first: "$Movie_Name" }, 
+              Highest_Collection: { $first: "$BoxOfficeCollection" } } },
+  { $sort: { Highest_Collection: 1 } }
+])
+```
+
+### ✅ **Output**
+
+```json
+[
+  { "_id": "War", "Movie_Name": "Dunkirk", "Highest_Collection": 700 },
+  { "_id": "Adventure", "Movie_Name": "Jurassic Park", "Highest_Collection": 1000 },
+  { "_id": "Action", "Movie_Name": "Terminator", "Highest_Collection": 1200 },
+  { "_id": "Romance", "Movie_Name": "Titanic", "Highest_Collection": 2200 },
+  { "_id": "Sci-Fi", "Movie_Name": "Avatar", "Highest_Collection": 2800 }
+]
+```
+
+### ✅ **Explanation:**
+
+* The last stage `$sort: { Highest_Collection: 1 }` arranges results **ascending by collection**.
+
+---
+
+# 🧩 **4️⃣ Create an index on field `Movie_ID`**
+
+### 💻 **Query**
+
+```javascript
+db.Movies_Data.createIndex({ Movie_ID: 1 })
+```
+
+### ✅ **Output**
+
+```
+{
+  "numIndexesBefore": 1,
+  "numIndexesAfter": 2,
+  "createdCollectionAutomatically": false,
+  "ok": 1
+}
+```
+
+✅ **Explanation:**
+Creates an **ascending index** on `Movie_ID` to improve query performance for ID lookups.
+
+---
+
+# 🧩 **5️⃣ Create an index on fields `Movie_Name` and `Director`**
+
+### 💻 **Query**
+
+```javascript
+db.Movies_Data.createIndex({ Movie_Name: 1, Director: 1 })
+```
+
+✅ **Explanation:**
+This creates a **compound index** that speeds up queries filtering or sorting by both fields.
+
+---
+
+# 🧩 **6️⃣ Drop index on field `Movie_ID`**
+
+### 💻 **Query**
+
+```javascript
+db.Movies_Data.dropIndex({ Movie_ID: 1 })
+```
+
+✅ **Explanation:**
+Removes the index previously created on `Movie_ID`.
+
+---
+
+# 🧩 **7️⃣ Drop index on fields `Movie_Name` and `Director`**
+
+### 💻 **Query**
+
+```javascript
+db.Movies_Data.dropIndex({ Movie_Name: 1, Director: 1 })
+```
+
+✅ **Explanation:**
+Deletes the **compound index** on `Movie_Name` and `Director`.
+
+---
+
+# ✅ **Summary of Commands**
+
+| Task                                  | MongoDB Command                                              |
+| ------------------------------------- | ------------------------------------------------------------ |
+| Create Collection                     | `db.createCollection("Movies_Data")`                         |
+| Count movies per director             | `$group: { _id: "$Director", $sum: 1 }`                      |
+| Highest collection per Genre          | `$sort + $group + $first`                                    |
+| Ascending order by highest collection | Add `$sort: { Highest_Collection: 1 }`                       |
+| Create Index (single field)           | `db.Movies_Data.createIndex({ Movie_ID: 1 })`                |
+| Create Compound Index                 | `db.Movies_Data.createIndex({ Movie_Name: 1, Director: 1 })` |
+| Drop Index (single field)             | `db.Movies_Data.dropIndex({ Movie_ID: 1 })`                  |
+| Drop Compound Index                   | `db.Movies_Data.dropIndex({ Movie_Name: 1, Director: 1 })`   |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS AND ANSWERS**
+
+| **Q.No** | **Question**                                        | **Answer**                                                                                                |
+| -------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1        | What is Aggregation in MongoDB?                     | Aggregation is the process of performing operations on multiple documents and returning computed results. |
+| 2        | What is the use of `$group` stage?                  | It groups documents by a specific field and applies aggregate functions like `$sum`, `$avg`, `$max`.      |
+| 3        | What is the use of `$sort` in Aggregation?          | `$sort` is used to arrange documents in ascending or descending order based on a field.                   |
+| 4        | What does `$first` do in aggregation?               | `$first` returns the first document of each group (after sorting).                                        |
+| 5        | What is an Index in MongoDB?                        | An index is a data structure that improves the speed of data retrieval operations.                        |
+| 6        | What is a Compound Index?                           | An index created on multiple fields to optimize multi-field queries.                                      |
+| 7        | What is the default index created by MongoDB?       | The `_id` field is automatically indexed by MongoDB.                                                      |
+| 8        | How do you check existing indexes in a collection?  | Using `db.Movies_Data.getIndexes()`                                                                       |
+| 9        | What is the command to drop an index?               | `db.collection.dropIndex({ field: 1 })`                                                                   |
+| 10       | What is the use of `$sum: 1` in `$group`?           | It counts the number of documents in each group.                                                          |
+| 11       | What is the difference between `$max` and `$first`? | `$max` returns the maximum value; `$first` returns the first document based on sorting.                   |
+| 12       | Can you create multiple indexes on a collection?    | Yes, multiple single-field and compound indexes can be created.                                           |
+| 13       | What are the types of indexes in MongoDB?           | Single field, Compound, Multikey, Text, and Geospatial indexes.                                           |
+| 14       | What are the advantages of indexes?                 | Faster query performance, optimized sorting, and better filtering efficiency.                             |
+| 15       | What is the disadvantage of too many indexes?       | They consume extra memory and slow down insert/update operations.                                         |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **Aggregation Framework:**
+
+  * `$group`, `$sort`, `$first`, `$sum`, `$avg`, `$max` are commonly used operators.
+* **Indexing Commands:**
+
+  * Create Index → `createIndex()`
+  * Drop Index → `dropIndex()`
+  * Check Indexes → `getIndexes()`
+* **Compound Index:** Improves performance for queries using multiple fields.
+* **Always Sort Before Grouping** if you want to extract highest/lowest values using `$first`.
+
+---
+
+✅ **Final Summary:**
+
+* You created `Movies_Data` collection.
+* Used **aggregation pipelines** to group, sort, and summarize data.
+* Created and dropped **indexes** (single and compound).
+* Demonstrated understanding of both **data analysis** and **optimization** in MongoDB.

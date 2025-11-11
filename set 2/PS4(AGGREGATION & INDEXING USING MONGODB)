@@ -1,0 +1,236 @@
+## 🧾 **Problem Statement 4 (AGGREGATION & INDEXING USING MONGODB)**
+
+### **Collection: `Student_Data`**
+
+**Schema:**
+`Student_Data(Student_ID, Student_Name, Department, Marks)`
+
+---
+
+## 💻 **Step 1: Create Database and Collection**
+
+```javascript
+use CollegeDB
+db.createCollection("Student_Data")
+```
+
+---
+
+## 💻 **Step 2: Insert Sample Documents**
+
+```javascript
+db.Student_Data.insertMany([
+  { Student_ID: 101, Student_Name: "Rohit", Department: "Computer", Marks: 85 },
+  { Student_ID: 102, Student_Name: "Sneha", Department: "IT", Marks: 90 },
+  { Student_ID: 103, Student_Name: "Amit", Department: "Computer", Marks: 78 },
+  { Student_ID: 104, Student_Name: "Neha", Department: "Mechanical", Marks: 88 },
+  { Student_ID: 105, Student_Name: "Tina", Department: "IT", Marks: 95 },
+  { Student_ID: 106, Student_Name: "Karan", Department: "Mechanical", Marks: 82 },
+  { Student_ID: 107, Student_Name: "Riya", Department: "Computer", Marks: 92 },
+  { Student_ID: 108, Student_Name: "Vivek", Department: "IT", Marks: 67 },
+  { Student_ID: 109, Student_Name: "Pooja", Department: "Mechanical", Marks: 91 },
+  { Student_ID: 110, Student_Name: "Arjun", Department: "Computer", Marks: 70 }
+])
+```
+
+✅ **Inserted 10 sample students** from different departments.
+
+---
+
+## 🧮 **QUERIES & OUTPUTS**
+
+---
+
+### **1️⃣ Display all students based on their departments along with average marks of that department**
+
+```javascript
+db.Student_Data.aggregate([
+  { 
+    $group: { 
+      _id: "$Department", 
+      Average_Marks: { $avg: "$Marks" },
+      Students: { $push: "$Student_Name" }
+    } 
+  }
+])
+```
+
+**Explanation:**
+
+* `$group` groups students by department.
+* `$avg` calculates average marks per department.
+* `$push` creates an array of student names in that department.
+
+**Sample Output:**
+
+```json
+[
+  {
+    "_id": "Computer",
+    "Average_Marks": 81.25,
+    "Students": ["Rohit", "Amit", "Riya", "Arjun"]
+  },
+  {
+    "_id": "IT",
+    "Average_Marks": 84,
+    "Students": ["Sneha", "Tina", "Vivek"]
+  },
+  {
+    "_id": "Mechanical",
+    "Average_Marks": 87,
+    "Students": ["Neha", "Karan", "Pooja"]
+  }
+]
+```
+
+---
+
+### **2️⃣ Display number of students in each department**
+
+```javascript
+db.Student_Data.aggregate([
+  { 
+    $group: { 
+      _id: "$Department", 
+      No_of_Students: { $sum: 1 } 
+    } 
+  }
+])
+```
+
+**Explanation:**
+
+* `$sum: 1` counts one record per student in each department.
+
+**Sample Output:**
+
+```json
+[
+  { "_id": "Computer", "No_of_Students": 4 },
+  { "_id": "IT", "No_of_Students": 3 },
+  { "_id": "Mechanical", "No_of_Students": 3 }
+]
+```
+
+---
+
+### **3️⃣ Display students with highest marks in each department (Descending order of Marks)**
+
+```javascript
+db.Student_Data.aggregate([
+  { $sort: { Department: 1, Marks: -1 } },
+  { 
+    $group: { 
+      _id: "$Department",
+      Top_Student: { $first: "$Student_Name" },
+      Highest_Marks: { $first: "$Marks" }
+    }
+  },
+  { $sort: { Highest_Marks: -1 } }
+])
+```
+
+**Explanation:**
+
+* `$sort` arranges by department and descending marks.
+* `$group` with `$first` picks the top student after sorting.
+* Second `$sort` arranges departments by highest marks descending.
+
+**Sample Output:**
+
+```json
+[
+  { "_id": "IT", "Top_Student": "Tina", "Highest_Marks": 95 },
+  { "_id": "Mechanical", "Top_Student": "Pooja", "Highest_Marks": 91 },
+  { "_id": "Computer", "Top_Student": "Riya", "Highest_Marks": 92 }
+]
+```
+
+---
+
+### **4️⃣ Create an index on field `Student_ID`**
+
+```javascript
+db.Student_Data.createIndex({ Student_ID: 1 })
+```
+
+✅ **Creates an ascending index** on Student_ID.
+
+**Check created indexes:**
+
+```javascript
+db.Student_Data.getIndexes()
+```
+
+---
+
+### **5️⃣ Create an index on fields `Student_Name` and `Department`**
+
+```javascript
+db.Student_Data.createIndex({ Student_Name: 1, Department: 1 })
+```
+
+✅ **Compound Index** — helps optimize queries filtering by both name and department.
+
+---
+
+### **6️⃣ Drop index on field `Student_ID`**
+
+```javascript
+db.Student_Data.dropIndex("Student_ID_1")
+```
+
+✅ Drops the index created on `Student_ID`.
+
+---
+
+### **7️⃣ Drop index on fields `Student_Name` and `Department`**
+
+```javascript
+db.Student_Data.dropIndex("Student_Name_1_Department_1")
+```
+
+✅ Drops the compound index created earlier.
+
+---
+
+## 🧠 **Summary of Commands**
+
+| Task                     | MongoDB Command                       |
+| ------------------------ | ------------------------------------- |
+| Create collection        | `db.createCollection("Student_Data")` |
+| Insert data              | `db.Student_Data.insertMany([...])`   |
+| Avg marks per department | `$group` + `$avg`                     |
+| Count students per dept  | `$group` + `$sum:1`                   |
+| Highest marks            | `$sort`, `$group`, `$first`           |
+| Create index             | `createIndex({ field: 1 })`           |
+| Drop index               | `dropIndex("index_name")`             |
+
+---
+
+## 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                                        | **Answer**                                                                                                       |
+| -------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 1        | What is Aggregation in MongoDB?                                     | Aggregation is used to process multiple documents and return computed results, such as sum, average, count, etc. |
+| 2        | Which command is used for aggregation?                              | The `aggregate()` method is used with stages like `$group`, `$match`, `$sort`, `$project`, etc.                  |
+| 3        | What does the `$group` stage do?                                    | It groups documents by a specified field and can perform operations like `$sum`, `$avg`, `$max`, etc.            |
+| 4        | What does `$avg` operator do?                                       | `$avg` calculates the average value of a numeric field for grouped documents.                                    |
+| 5        | How do you count documents in each group?                           | By using `$sum: 1` inside the `$group` stage.                                                                    |
+| 6        | What is the purpose of `$first` operator?                           | `$first` returns the first document’s value in each group (after sorting). Useful for top records.               |
+| 7        | What is an index in MongoDB?                                        | An index improves the speed of queries by creating an ordered data structure for specific fields.                |
+| 8        | How do you create a compound index?                                 | Using `createIndex({ field1: 1, field2: 1 })`.                                                                   |
+| 9        | How can we view all indexes in a collection?                        | Using `db.collection.getIndexes()`.                                                                              |
+| 10       | What is the difference between `createIndex()` and `ensureIndex()`? | `createIndex()` is the current method; `ensureIndex()` was an older, now-deprecated one.                         |
+| 11       | Why should we drop unused indexes?                                  | Because indexes consume storage and slow down insert/update operations if not needed.                            |
+| 12       | What is the significance of sorting before grouping?                | Sorting helps to select top or bottom records in each group using `$first` or `$last`.                           |
+
+---
+
+## ✅ **Key Points for Practical Notebook**
+
+* **Aggregation pipeline = sequence of stages.**
+* **Operators used:** `$group`, `$avg`, `$sum`, `$sort`, `$first`.
+* **Index types:** Single-field and compound index.
+* **Drop index syntax:** `db.collection.dropIndex("index_name")`.
+* **Check indexes:** `db.collection.getIndexes()`.

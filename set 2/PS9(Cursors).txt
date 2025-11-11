@@ -1,0 +1,226 @@
+# 🧾 **Problem Statement 9 (Cursors)**
+
+### Table Schema:
+
+**Employee (Emp_id, Emp_Name, Salary)**
+
+---
+
+## ⚙️ **Step 1: Create Employee Table and Insert Data**
+
+```sql
+CREATE TABLE Employee (
+    Emp_id NUMBER PRIMARY KEY,
+    Emp_Name VARCHAR2(50),
+    Salary NUMBER
+);
+
+INSERT INTO Employee VALUES (101, 'Rohit', 45000);
+INSERT INTO Employee VALUES (102, 'Sneha', 55000);
+INSERT INTO Employee VALUES (103, 'Amit', 60000);
+INSERT INTO Employee VALUES (104, 'Karan', 75000);
+INSERT INTO Employee VALUES (105, 'Priya', 40000);
+COMMIT;
+```
+
+✅ **5 sample employees inserted.**
+
+---
+
+# 🧩 **1️⃣ Explicit Cursor**
+
+### 💻 **Program: Display all employees with salary greater than 50,000**
+
+```sql
+DECLARE
+    v_emp_id   Employee.Emp_id%TYPE;
+    v_name     Employee.Emp_Name%TYPE;
+    v_salary   Employee.Salary%TYPE;
+
+    CURSOR emp_cursor IS
+        SELECT Emp_id, Emp_Name, Salary
+        FROM Employee
+        WHERE Salary > 50000;
+BEGIN
+    OPEN emp_cursor;
+    LOOP
+        FETCH emp_cursor INTO v_emp_id, v_name, v_salary;
+        EXIT WHEN emp_cursor%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Emp_ID: ' || v_emp_id || 
+                             ', Name: ' || v_name || 
+                             ', Salary: ' || v_salary);
+    END LOOP;
+    CLOSE emp_cursor;
+END;
+/
+```
+
+---
+
+### ✅ **Explanation:**
+
+| Step  | Description                                                                                 |
+| ----- | ------------------------------------------------------------------------------------------- |
+| **1** | Declared variables to store employee data.                                                  |
+| **2** | Declared a cursor `emp_cursor` for employees with salary > 50,000.                          |
+| **3** | Opened cursor → fetched each row using `FETCH` → displayed it using `DBMS_OUTPUT.PUT_LINE`. |
+| **4** | Used `EXIT WHEN emp_cursor%NOTFOUND` to end the loop.                                       |
+| **5** | Closed the cursor after processing all rows.                                                |
+
+---
+
+### 🧾 **Sample Output:**
+
+```
+Emp_ID: 102, Name: Sneha, Salary: 55000
+Emp_ID: 103, Name: Amit, Salary: 60000
+Emp_ID: 104, Name: Karan, Salary: 75000
+```
+
+---
+
+# 🧩 **2️⃣ Implicit Cursor**
+
+### 💻 **Program: Display total number of tuples in Employee table**
+
+```sql
+DECLARE
+    v_total NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_total FROM Employee;
+    DBMS_OUTPUT.PUT_LINE('Total number of employees: ' || v_total);
+END;
+/
+```
+
+✅ **Simpler version using Implicit Cursor.**
+
+---
+
+### ✅ **Explanation:**
+
+| Step  | Description                                                                         |
+| ----- | ----------------------------------------------------------------------------------- |
+| **1** | No cursor is explicitly declared — SQL engine automatically creates one internally. |
+| **2** | SELECT query runs implicitly inside PL/SQL.                                         |
+| **3** | Result stored into `v_total`.                                                       |
+| **4** | Displays total number of employees.                                                 |
+
+---
+
+### 🧾 **Sample Output:**
+
+```
+Total number of employees: 5
+```
+
+---
+
+# 🧩 **3️⃣ Parameterized Cursor**
+
+### 💻 **Program: Display salary of employee for entered Emp_ID**
+
+```sql
+DECLARE
+    v_salary Employee.Salary%TYPE;
+    v_emp_id Employee.Emp_id%TYPE := &emp_id;
+
+    CURSOR emp_salary_cursor(p_emp_id Employee.Emp_id%TYPE) IS
+        SELECT Salary FROM Employee WHERE Emp_id = p_emp_id;
+BEGIN
+    OPEN emp_salary_cursor(v_emp_id);
+    FETCH emp_salary_cursor INTO v_salary;
+
+    IF emp_salary_cursor%FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Salary of Employee ID ' || v_emp_id || ' is ' || v_salary);
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Employee not found.');
+    END IF;
+
+    CLOSE emp_salary_cursor;
+END;
+/
+```
+
+---
+
+### ✅ **Explanation:**
+
+| Step  | Description                                                                  |
+| ----- | ---------------------------------------------------------------------------- |
+| **1** | Declared parameterized cursor with one parameter `p_emp_id`.                 |
+| **2** | The user enters Emp_ID dynamically using substitution variable `&emp_id`.    |
+| **3** | Cursor is opened with that parameter value.                                  |
+| **4** | If record found → displays salary. Otherwise → message “Employee not found.” |
+
+---
+
+### 🧾 **Sample Output:**
+
+**Input:**
+
+```
+Enter value for emp_id: 103
+```
+
+**Output:**
+
+```
+Salary of Employee ID 103 is 60000
+```
+
+---
+
+# ✅ **Summary of Programs**
+
+| Type          | Cursor Name         | Purpose                                     | Key Feature                         |
+| ------------- | ------------------- | ------------------------------------------- | ----------------------------------- |
+| Explicit      | `emp_cursor`        | Displays employees with salary > 50,000     | Manual OPEN, FETCH, CLOSE           |
+| Implicit      | N/A                 | Displays total employee count               | Automatically handled by SQL engine |
+| Parameterized | `emp_salary_cursor` | Displays salary of employee entered by user | Accepts user input (parameter)      |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                                 | **Answer**                                                                                                               |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| 1        | What is a Cursor in PL/SQL?                                  | A cursor is a pointer to the result set of a SQL query that allows row-by-row processing.                                |
+| 2        | What are the types of cursors in PL/SQL?                     | Two types: **Implicit Cursor** and **Explicit Cursor**.                                                                  |
+| 3        | What is the difference between Implicit and Explicit Cursor? | Implicit cursors are created automatically by Oracle for DML statements; explicit cursors are defined by the programmer. |
+| 4        | What is a Parameterized Cursor?                              | It allows passing parameters (like Emp_ID) to a cursor at runtime.                                                       |
+| 5        | What are the attributes of a cursor?                         | `%FOUND`, `%NOTFOUND`, `%ROWCOUNT`, `%ISOPEN`.                                                                           |
+| 6        | What does `%NOTFOUND` return?                                | TRUE when no more rows are found to fetch from the cursor.                                                               |
+| 7        | What is the use of `%ROWCOUNT`?                              | It returns the number of rows fetched or affected by the cursor.                                                         |
+| 8        | When do we use an Explicit Cursor?                           | When we need to process query results row-by-row in PL/SQL.                                                              |
+| 9        | When is a cursor automatically closed?                       | Implicit cursors close automatically after execution; explicit cursors must be closed manually.                          |
+| 10       | What is the syntax for declaring a cursor?                   | `CURSOR cursor_name IS SELECT ...;`                                                                                      |
+| 11       | Can a cursor accept multiple parameters?                     | Yes, parameterized cursors can accept multiple parameters.                                                               |
+| 12       | What happens if you don’t close a cursor?                    | It may cause memory leaks or “maximum open cursors exceeded” errors.                                                     |
+| 13       | What is the use of `FETCH` statement?                        | It retrieves one row at a time from the cursor into variables.                                                           |
+| 14       | Can we update data using a cursor?                           | Yes, by declaring the cursor with the `FOR UPDATE` clause.                                                               |
+| 15       | What is the advantage of cursors?                            | They allow row-wise processing of query results and more control over data manipulation.                                 |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **Explicit Cursor Syntax:**
+
+  ```sql
+  CURSOR cursor_name IS SELECT ...;
+  OPEN cursor_name;
+  FETCH cursor_name INTO variables;
+  CLOSE cursor_name;
+  ```
+* **Implicit Cursor:** Oracle automatically handles open/fetch/close.
+* **Parameterized Cursor:** Cursor with arguments.
+* **Cursor Attributes:** `%FOUND`, `%NOTFOUND`, `%ROWCOUNT`, `%ISOPEN`.
+
+---
+
+✅ **Summary:**
+
+* Explicit Cursor → Manual control
+* Implicit Cursor → Automatic control
+* Parameterized Cursor → Dynamic user input

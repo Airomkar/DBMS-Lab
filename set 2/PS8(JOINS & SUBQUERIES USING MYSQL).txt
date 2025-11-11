@@ -1,0 +1,268 @@
+# 🧾 **Problem Statement 8 (JOINS & SUBQUERIES USING MYSQL)**
+
+---
+
+## 🧩 **Schema**
+
+1. **Employee**
+   (`Employee_id`, `First_name`, `Last_name`, `Hire_date`, `Salary`, `Job_title`, `Manager_id`, `Department_id`)
+2. **Departments**
+   (`Department_id`, `Department_name`, `Manager_id`, `Location_id`)
+3. **Locations**
+   (`Location_id`, `Street_address`, `Postal_code`, `City`, `State`, `Country_id`)
+4. **Manager**
+   (`Manager_id`, `Manager_name`)
+
+---
+
+## 💻 **Step 1: Create Database**
+
+```sql
+CREATE DATABASE CompanyDB;
+USE CompanyDB;
+```
+
+---
+
+## 💻 **Step 2: Create Tables with Referential Integrity**
+
+```sql
+CREATE TABLE Manager (
+    Manager_id INT PRIMARY KEY,
+    Manager_name VARCHAR(50)
+);
+
+CREATE TABLE Locations (
+    Location_id INT PRIMARY KEY,
+    Street_address VARCHAR(100),
+    Postal_code VARCHAR(10),
+    City VARCHAR(50),
+    State VARCHAR(50),
+    Country_id VARCHAR(10)
+);
+
+CREATE TABLE Departments (
+    Department_id INT PRIMARY KEY,
+    Department_name VARCHAR(50),
+    Manager_id INT,
+    Location_id INT,
+    FOREIGN KEY (Manager_id) REFERENCES Manager(Manager_id),
+    FOREIGN KEY (Location_id) REFERENCES Locations(Location_id)
+);
+
+CREATE TABLE Employee (
+    Employee_id INT PRIMARY KEY,
+    First_name VARCHAR(50),
+    Last_name VARCHAR(50),
+    Hire_date DATE,
+    Salary DECIMAL(10,2),
+    Job_title VARCHAR(50),
+    Manager_id INT,
+    Department_id INT,
+    FOREIGN KEY (Manager_id) REFERENCES Manager(Manager_id),
+    FOREIGN KEY (Department_id) REFERENCES Departments(Department_id)
+);
+```
+
+---
+
+## 💻 **Step 3: Insert Sample Data**
+
+```sql
+INSERT INTO Manager VALUES
+(201, 'Jones'),
+(202, 'Taylor'),
+(203, 'Singh'),
+(204, 'Smith');
+
+INSERT INTO Locations VALUES
+(1, 'Street 1', '411001', 'Pune', 'Maharashtra', 'IN'),
+(2, 'Street 2', '90001', 'Los Angeles', 'California', 'US'),
+(3, 'Street 3', '10001', 'New York', 'New York', 'US');
+
+INSERT INTO Departments VALUES
+(10, 'HR', 201, 1),
+(20, 'IT', 202, 2),
+(30, 'Finance', 203, 3),
+(40, 'Sales', 204, 3);
+
+INSERT INTO Employee VALUES
+(101, 'Rohit', 'Kumar', '2019-02-10', 6000, 'Clerk', 201, 10),
+(102, 'Sneha', 'Patil', '2017-03-15', 9000, 'Analyst', 202, 20),
+(103, 'Amit', 'Singh', '2016-01-12', 8000, 'Manager', NULL, 30),
+(104, 'Karan', 'Sharma', '2020-07-05', 7000, 'Developer', 202, 20),
+(105, 'Priya', 'Desai', '2021-10-02', 9500, 'Developer', 203, 30),
+(106, 'Neha', 'Verma', '2015-05-20', 12000, 'Senior Manager', 204, 40);
+```
+
+---
+
+# 🧮 **Now Solve the Given Queries**
+
+---
+
+### **1️⃣ Find names and salaries of employees who earn more than the employee whose last_name = 'Singh'**
+
+```sql
+SELECT First_name, Last_name, Salary
+FROM Employee
+WHERE Salary > (
+    SELECT Salary
+    FROM Employee
+    WHERE Last_name = 'Singh'
+);
+```
+
+✅ **Explanation:**
+
+* The subquery fetches the salary of `'Singh'`.
+* The outer query lists all employees whose salary is **greater** than that.
+
+**Sample Output:**
+
+| First_name | Last_name | Salary |
+| ---------- | --------- | ------ |
+| Sneha      | Patil     | 9000   |
+| Priya      | Desai     | 9500   |
+| Neha       | Verma     | 12000  |
+
+---
+
+### **2️⃣ Find names of employees who have a manager and work in a department based in the United States**
+
+```sql
+SELECT e.First_name, e.Last_name
+FROM Employee e
+JOIN Departments d ON e.Department_id = d.Department_id
+JOIN Locations l ON d.Location_id = l.Location_id
+WHERE e.Manager_id IS NOT NULL
+  AND l.Country_id = 'US';
+```
+
+✅ **Explanation:**
+
+* Checks if `Manager_id` is not null (i.e., they have a manager).
+* Filters departments located in the **United States**.
+
+**Sample Output:**
+
+| First_name | Last_name |
+| ---------- | --------- |
+| Sneha      | Patil     |
+| Karan      | Sharma    |
+| Priya      | Desai     |
+
+---
+
+### **3️⃣ Find names and salary of employees whose salary is greater than the average salary**
+
+```sql
+SELECT First_name, Last_name, Salary
+FROM Employee
+WHERE Salary > (SELECT AVG(Salary) FROM Employee);
+```
+
+✅ **Explanation:**
+
+* The subquery finds the average salary of all employees.
+* The main query lists employees with salaries **above average**.
+
+**Sample Output:**
+
+| First_name | Last_name | Salary |
+| ---------- | --------- | ------ |
+| Priya      | Desai     | 9500   |
+| Neha       | Verma     | 12000  |
+
+---
+
+### **4️⃣ Find employee id, name (last_name) along with their manager_id and manager name (last_name)**
+
+*(Using a **self join**)*
+
+```sql
+SELECT e.Employee_id, e.Last_name AS Employee_Name,
+       e.Manager_id, m.Manager_name AS Manager_Name
+FROM Employee e
+JOIN Manager m ON e.Manager_id = m.Manager_id;
+```
+
+✅ **Explanation:**
+
+* Joins Employee with Manager table using `Manager_id`.
+* Displays both employee and their manager name.
+
+**Sample Output:**
+
+| Employee_id | Employee_Name | Manager_id | Manager_Name |
+| ----------- | ------------- | ---------- | ------------ |
+| 101         | Kumar         | 201        | Jones        |
+| 102         | Patil         | 202        | Taylor       |
+| 104         | Sharma        | 202        | Taylor       |
+| 105         | Desai         | 203        | Singh        |
+| 106         | Verma         | 204        | Smith        |
+
+---
+
+### **5️⃣ Find names and hire dates of employees hired after 'Jones'**
+
+```sql
+SELECT First_name, Last_name, Hire_date
+FROM Employee
+WHERE Hire_date > (
+    SELECT Hire_date
+    FROM Employee
+    WHERE Last_name = 'Jones'
+);
+```
+
+✅ **Explanation:**
+
+* Subquery gets the hire_date of employee `'Jones'`.
+* Main query lists employees hired **after that date**.
+
+> ⚠️ If ‘Jones’ exists only in the Manager table, you may need to adjust query accordingly.
+
+---
+
+# 📋 **Summary of Queries**
+
+| Query | Concept Used                   | Keyword               |
+| ----- | ------------------------------ | --------------------- |
+| 1     | Comparison with subquery       | `>` + subquery        |
+| 2     | Multiple joins + filter        | `JOIN`, `IS NOT NULL` |
+| 3     | Average salary comparison      | `AVG()` + subquery    |
+| 4     | Self Join (Employee → Manager) | `JOIN`                |
+| 5     | Subquery with date comparison  | `>`                   |
+
+---
+
+# 🎓 **Viva / Oral Questions with Answers**
+
+| **Q.No** | **Question**                                                     | **Answer**                                                                                                           |
+| -------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1        | What is a JOIN in SQL?                                           | JOIN is used to combine rows from two or more tables based on a related column.                                      |
+| 2        | What are the types of JOINs in SQL?                              | INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL JOIN, SELF JOIN.                                                             |
+| 3        | What is a subquery?                                              | A subquery is a query inside another query that provides data for the main query.                                    |
+| 4        | What is the difference between JOIN and SUBQUERY?                | JOIN combines data horizontally from multiple tables, while a subquery provides values to the main query vertically. |
+| 5        | What is a self-join?                                             | A self-join is when a table is joined with itself (e.g., employee-manager relationship).                             |
+| 6        | What is referential integrity?                                   | It ensures relationships between tables remain consistent using foreign keys.                                        |
+| 7        | What is the purpose of `IS NOT NULL`?                            | It checks that a column has a value (used here to find employees who have a manager).                                |
+| 8        | What is the use of the `AVG()` function?                         | It returns the average of numeric values in a column.                                                                |
+| 9        | What is a foreign key?                                           | A foreign key links one table to another and enforces relational integrity.                                          |
+| 10       | How do you find employees earning more than a specific employee? | Use a subquery to get that employee’s salary, then compare with others.                                              |
+| 11       | What is a primary key?                                           | It uniquely identifies each record in a table.                                                                       |
+| 12       | Can we join more than two tables?                                | Yes, using multiple JOIN conditions chained together.                                                                |
+| 13       | What is the difference between INNER JOIN and LEFT JOIN?         | INNER JOIN returns only matching rows; LEFT JOIN returns all from the left table even if there is no match.          |
+| 14       | What is the use of alias in SQL?                                 | It gives a temporary name to a table or column for readability (e.g., `Employee e`).                                 |
+| 15       | What is the advantage of subqueries?                             | Subqueries simplify complex queries and make them modular and readable.                                              |
+
+---
+
+# ✅ **Key Points for Practical Notebook**
+
+* Always **define primary and foreign keys** to ensure referential integrity.
+* Use **JOIN** for combining related data.
+* Use **subqueries** for comparisons, averages, and date filters.
+* Use **aliases (`e`, `d`, `m`)** for readability.
+* Common SQL Functions: `AVG()`, `MAX()`, `MIN()`, `COUNT()`.

@@ -1,0 +1,198 @@
+🧾 Problem Statement 2 (DDL USING MYSQL) -- Create following tables using a given schema and insert appropriate data into the same:  
+                                            Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)  
+                                            Branch (Branch ID, Branch_Name, Address)  
+                                            Account (Account_no, Branch ID, CustID, open_date, Account_type, Balance) 
+                                            1. Create the tables with referential integrity. 
+                                            2. Draw the ER diagram for the same. 
+                                            3. Create a View as Saving account displaying the customer details with the open date as 16/8/2018. 
+                                            4. Update the View with Cust_Address as Pune for CustID =103. 
+                                            5. Create a View as Loan account displaying the customer details with the open date as 16/2/2018. 
+                                            6. Create an Index on primary key column of table Customer. 
+                                            7. Create an Index on primary key column of table Branch. 
+                                            8. Create a sequence on Customer Table. 
+                                            9. Create synonym ‘Cust_info’ for branch table.
+
+Schema
+
+We need 3 tables:
+
+1. **Customer**
+   (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)
+2. **Branch**
+   (Branch_ID, Branch_Name, Address)
+3. **Account**
+   (Account_no, Branch_ID, CustID, open_date, Account_type, Balance)
+
+💻 Step 1: Create Database
+
+CREATE DATABASE BankDB;
+USE BankDB;
+
+💻 Step 2: Create Tables with Referential Integrity
+
+
+CREATE TABLE Customer (
+    CustID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Cust_Address VARCHAR(100),
+    Phone_no VARCHAR(15),
+    Email_ID VARCHAR(50),
+    Age INT
+);
+
+CREATE TABLE Branch (
+    Branch_ID INT PRIMARY KEY,
+    Branch_Name VARCHAR(50),
+    Address VARCHAR(100)
+);
+
+CREATE TABLE Account (
+    Account_no INT PRIMARY KEY,
+    Branch_ID INT,
+    CustID INT,
+    open_date DATE,
+    Account_type VARCHAR(20),
+    Balance DECIMAL(10,2),
+    FOREIGN KEY (Branch_ID) REFERENCES Branch(Branch_ID),
+    FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+
+
+✅ **Explanation:**
+
+* Primary keys ensure each table has a unique record.
+* Foreign keys maintain referential integrity — linking `Account` to both `Customer` and `Branch`.
+
+💻 Step 3: Insert Sample Data
+
+INSERT INTO Customer VALUES
+(101, 'Rohit', 'Mumbai', '9876543210', 'rohit@gmail.com', 22),
+(102, 'Sneha', 'Nashik', '9876500001', 'sneha@gmail.com', 25),
+(103, 'Karan', 'Nagpur', '9822000002', 'karan@gmail.com', 28),
+(104, 'Priya', 'Pune', '9999999999', 'priya@gmail.com', 30),
+(105, 'Amit', 'Satara', '9090909090', 'amit@gmail.com', 26);
+
+INSERT INTO Branch VALUES
+(1, 'Main Branch', 'Pune'),
+(2, 'East Branch', 'Mumbai'),
+(3, 'West Branch', 'Nagpur');
+
+INSERT INTO Account VALUES
+(2001, 1, 101, '2018-08-16', 'Saving', 45000),
+(2002, 2, 102, '2018-02-16', 'Loan', 70000),
+(2003, 3, 103, '2018-08-16', 'Saving', 60000),
+(2004, 1, 104, '2018-02-16', 'Loan', 55000),
+(2005, 2, 105, '2018-08-16', 'Saving', 40000);
+
+💻 Step 4: Create View for Saving Account (open_date = 16/08/2018)
+
+CREATE VIEW Saving_Account AS
+SELECT c.CustID, c.Name, c.Cust_Address, c.Phone_no, c.Email_ID, a.open_date, a.Account_type, a.Balance
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Account_type = 'Saving' AND a.open_date = '2018-08-16';
+
+✅ **This view** shows all customers with Saving accounts opened on 16/08/2018.
+
+💻 Step 5: Update View (Cust_Address = Pune for CustID = 103)
+
+UPDATE Saving_Account
+SET Cust_Address = 'Pune'
+WHERE CustID = 103;
+
+✅ **Explanation:**
+Views can be updated if based on one table or simple joins. This updates the base table `Customer`.
+
+💻 Step 6: Create View for Loan Account (open_date = 16/02/2018)
+
+CREATE VIEW Loan_Account AS
+SELECT c.CustID, c.Name, c.Cust_Address, c.Phone_no, c.Email_ID, a.open_date, a.Account_type, a.Balance
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Account_type = 'Loan' AND a.open_date = '2018-02-16';
+
+✅ Shows customer details for **loan accounts opened on 16/02/2018**
+
+💻 Step 7: Create Index on Customer Table (Primary Key)
+
+CREATE INDEX idx_customer ON Customer(CustID);
+
+✅ Index improves search performance on CustID.
+
+💻 Step 8: Create Index on Branch Table (Primary Key)
+
+
+CREATE INDEX idx_branch ON Branch(Branch_ID);
+
+
+✅ Improves query performance when filtering by Branch_ID.
+
+💻 Step 9: Create Sequence for Customer Table
+
+*(MySQL 8.0+ supports sequences)*
+
+CREATE SEQUENCE cust_seq
+START WITH 106
+INCREMENT BY 1;
+
+✅ **Usage
+
+INSERT INTO Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)
+VALUES (NEXT VALUE FOR cust_seq, 'Tina', 'Kolhapur', '9898989898', 'tina@gmail.com', 29);
+
+💻 Step 10: Create Synonym ‘Cust_info’ for Branch Table**
+
+      > ⚠️ Note: MySQL doesn’t support **synonyms** directly (this is available in Oracle).
+      > However, we can simulate using a **View** or **Alias**.
+
+CREATE VIEW Cust_info AS
+SELECT * FROM Branch;
+
+
+      ✅ Acts as a synonym (alternate name) for Branch table.
+
+🧩 **Step 11: ER Diagram Description**
+
+**Entities:**
+
+* **Customer (CustID)** → Primary Key
+* **Branch (Branch_ID)** → Primary Key
+* **Account (Account_no)** → Primary Key
+
+  * **Foreign Key (CustID)** → references Customer(CustID)
+  * **Foreign Key (Branch_ID)** → references Branch(Branch_ID)
+
+**Relationships:**
+
+* One **Customer** → can have many **Accounts**
+* One **Branch** → can have many **Accounts**
+
+**Diagram (Text Form):**
+
+
+Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)
+        | 1
+        |
+        |∞
+   Account (Account_no, Branch_ID, CustID, open_date, Account_type, Balance)
+        |∞
+        |
+        |1
+   Branch (Branch_ID, Branch_Name, Address)
+
+
+
+## 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                                    | **Answer**                                                                                                                        |
+| -------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | What is DDL in SQL?                                             | DDL stands for Data Definition Language — it is used to define or change the structure of database objects (CREATE, ALTER, DROP). |
+| 2        | What is Referential Integrity?                                  | It ensures that foreign key values always refer to existing primary key values in another table.                                  |
+| 3        | What is the difference between a Primary Key and a Foreign Key? | A primary key uniquely identifies each record, while a foreign key links one table to another.                                    |
+| 4        | What is a View?                                                 | A view is a virtual table created using a SQL query that displays data from one or more tables.                                   |
+| 5        | Can we update a View?                                           | Yes, if the view is based on a single table or simple join, we can update it.                                                     |
+| 6        | What is an Index?                                               | An index is a database object used to improve the speed of data retrieval operations.                                             |
+| 7        | Why do we use a Sequence?                                       | Sequences generate unique numeric values automatically, often used for primary keys.                                              |
+| 8        | What is a Synonym?                                              | A synonym is an alternate name given to a table or view to simplify queries (mainly in Oracle).                                   |
+| 9        | What is the difference between DDL and DML?                     | DDL defines structure (CREATE, ALTER, DROP), while DML manipulates data (INSERT, UPDATE, DELETE).                                 |
+| 10       | What is the purpose of foreign keys in the Account table?       | They establish relationships with Customer and Branch, ensuring valid references.                                                 |

@@ -1,0 +1,171 @@
+## 🧾 **Problem Statement 3 (Unnamed Block)** -- 
+                                  Employee( emp_id, dept_idemp_name, DoJ, salary, commission,job_title) 
+                                  Salary_Increment(emp_id, new_salary) 
+                                  Consider the schema given above. Write a PLSQL Unnamed Block of code to increase the salary of employee
+                                   115 based on the following conditions:  
+                                  Accept emp_id from user. If experience of employee is more than 10 years, increase salary by 20%. If experience
+                                   is greater than 5 years, increase salary by 10% Otherwise 5%. (Hint: Find the years of experience from Date of
+                                   Joining (DoJ)). Store the incremented salary in Salary_Increment table. 
+                                  Also handle the exception by named exception handler or user defined exception handler.
+
+### **Schema**
+
+* **Employee** (`emp_id`, `dept_id`, `emp_name`, `DoJ`, `salary`, `commission`, `job_title`)
+* **Salary_Increment** (`emp_id`, `new_salary`)
+
+---
+
+## 💻 **Step-by-Step PL/SQL Program**
+
+### ✅ **PL/SQL Code:**
+
+```sql
+DECLARE
+    v_emp_id        Employee.emp_id%TYPE := &emp_id;   -- Accept emp_id from user
+    v_salary        Employee.salary%TYPE;
+    v_doj           Employee.DoJ%TYPE;
+    v_exp_years     NUMBER;
+    v_new_salary    NUMBER;
+
+    e_no_employee   EXCEPTION;  -- User-defined exception
+
+BEGIN
+    -- Fetch current salary and date of joining for the given employee
+    SELECT salary, DoJ
+    INTO v_salary, v_doj
+    FROM Employee
+    WHERE emp_id = v_emp_id;
+
+    -- Calculate experience in years
+    v_exp_years := FLOOR(MONTHS_BETWEEN(SYSDATE, v_doj) / 12);
+
+    -- Calculate new salary based on experience
+    IF v_exp_years > 10 THEN
+        v_new_salary := v_salary + (v_salary * 0.20);
+    ELSIF v_exp_years > 5 THEN
+        v_new_salary := v_salary + (v_salary * 0.10);
+    ELSE
+        v_new_salary := v_salary + (v_salary * 0.05);
+    END IF;
+
+    -- Insert record into Salary_Increment table
+    INSERT INTO Salary_Increment(emp_id, new_salary)
+    VALUES(v_emp_id, v_new_salary);
+
+    -- Display confirmation
+    DBMS_OUTPUT.PUT_LINE('Employee ID: ' || v_emp_id);
+    DBMS_OUTPUT.PUT_LINE('Experience: ' || v_exp_years || ' years');
+    DBMS_OUTPUT.PUT_LINE('Old Salary: ' || v_salary);
+    DBMS_OUTPUT.PUT_LINE('New Salary: ' || v_new_salary);
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Employee not found!');
+    WHEN e_no_employee THEN
+        DBMS_OUTPUT.PUT_LINE('Custom Error: Invalid employee ID!');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Some unexpected error occurred!');
+END;
+/
+```
+
+---
+
+## ⚙️ **Explanation of the Code**
+
+| Step  | Description                                                                            |
+| ----- | -------------------------------------------------------------------------------------- |
+| **1** | Declares variables to store employee ID, salary, date of joining, and experience.      |
+| **2** | Takes `emp_id` from user using substitution variable (`&emp_id`).                      |
+| **3** | Fetches employee’s `salary` and `DoJ` from **Employee** table.                         |
+| **4** | Calculates **experience in years** using `MONTHS_BETWEEN(SYSDATE, DoJ)/12`.            |
+| **5** | Increases salary by:<br>• 20% if >10 years<br>• 10% if >5 years<br>• 5% otherwise.     |
+| **6** | Inserts the new salary into **Salary_Increment** table.                                |
+| **7** | Uses **exception handling** to catch missing employee (NO_DATA_FOUND) or other errors. |
+| **8** | Displays output using `DBMS_OUTPUT.PUT_LINE`.                                          |
+
+---
+
+## 🧮 **Example Execution**
+
+**Input:**
+
+```
+Enter value for emp_id: 115
+```
+
+**Output:**
+
+```
+Employee ID: 115
+Experience: 8 years
+Old Salary: 40000
+New Salary: 44000
+```
+
+**Record inserted into:**
+
+```sql
+SELECT * FROM Salary_Increment;
+
+EMP_ID | NEW_SALARY
+-------|------------
+115    | 44000
+```
+
+---
+
+## ⚠️ **Tables (Sample Data)**
+
+### Employee
+
+| emp_id | dept_id | emp_name | DoJ         | salary | commission | job_title |
+| ------ | ------- | -------- | ----------- | ------ | ---------- | --------- |
+| 115    | 10      | Rohit    | 15-JUL-2015 | 40000  | 2000       | Developer |
+| 116    | 11      | Sneha    | 20-APR-2012 | 50000  | 3000       | Analyst   |
+| 117    | 12      | Amit     | 01-JAN-2022 | 30000  | 1000       | Trainee   |
+
+### Salary_Increment
+
+| emp_id | new_salary |
+| ------ | ---------- |
+| 115    | 44000      |
+| 116    | 60000      |
+| 117    | 31500      |
+
+---
+
+## 🎓 **Viva / Oral Questions with Answers**
+
+| **Q.No** | **Question**                                                           | **Answer**                                                                                                                   |
+| -------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1        | What is a PL/SQL unnamed block?                                        | It’s a PL/SQL block that doesn’t have a name and is executed immediately. It is not stored in the database.                  |
+| 2        | What is the difference between named and unnamed blocks?               | Named blocks (like procedures, functions, triggers) are stored and can be reused; unnamed blocks are anonymous and run once. |
+| 3        | How do you accept user input in PL/SQL?                                | Using substitution variables like `&emp_id` in SQL*Plus or SQL Developer.                                                    |
+| 4        | How do you calculate experience from the joining date?                 | Using `MONTHS_BETWEEN(SYSDATE, DoJ)/12` to get years of experience.                                                          |
+| 5        | What is the purpose of `DBMS_OUTPUT.PUT_LINE`?                         | It displays messages or output to the screen during PL/SQL execution.                                                        |
+| 6        | What is an exception in PL/SQL?                                        | An exception is an error condition during execution that interrupts the normal flow of program execution.                    |
+| 7        | What are user-defined exceptions?                                      | Exceptions declared by the programmer using the `EXCEPTION` keyword.                                                         |
+| 8        | What is `NO_DATA_FOUND` exception?                                     | It occurs when a SELECT INTO statement returns no rows.                                                                      |
+| 9        | What is the difference between `WHEN OTHERS` and `WHEN NO_DATA_FOUND`? | `WHEN NO_DATA_FOUND` handles a specific error; `WHEN OTHERS` handles any error not specifically named.                       |
+| 10       | Why do we use `INSERT INTO` in this block?                             | To store the calculated new salary in another table (Salary_Increment) for record keeping.                                   |
+
+---
+
+## 🧠 **Key Points for Viva Revision**
+
+* **Unnamed Block = BEGIN–END block** directly executed.
+* **Use of substitution variable** → `&emp_id`.
+* **Experience Calculation Formula:**
+  `experience = FLOOR(MONTHS_BETWEEN(SYSDATE, DoJ)/12)`
+* **Conditional increment logic:**
+
+  * > 10 yrs → +20%
+  * > 5 yrs → +10%
+  * else → +5%
+* **Exception Handling:**
+
+  * `NO_DATA_FOUND`
+  * `OTHERS`
+  * Optional user-defined exception
+* **Insert into another table (Salary_Increment)** for auditing.

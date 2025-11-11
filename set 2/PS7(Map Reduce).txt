@@ -1,0 +1,234 @@
+# 🧾 **Problem Statement 7 (Map Reduce)**
+
+### **Collection:** `Book`
+
+**Fields:**
+`Title`, `Author_name`, `Borrowed_status`, and (for the last query) `Price`.
+
+---
+
+## 💻 **Step 1: Create Database and Collection**
+
+```javascript
+use LibraryDB
+db.createCollection("Book")
+```
+
+---
+
+## 💻 **Step 2: Insert Sample Documents**
+
+```javascript
+db.Book.insertMany([
+  { Title: "Database Systems", Author_name: "Ramakrishnan", Borrowed_status: true, Price: 450 },
+  { Title: "Operating Systems", Author_name: "Silberschatz", Borrowed_status: false, Price: 280 },
+  { Title: "AI Fundamentals", Author_name: "Russell", Borrowed_status: true, Price: 500 },
+  { Title: "Computer Networks", Author_name: "Tanenbaum", Borrowed_status: false, Price: 350 },
+  { Title: "Machine Learning", Author_name: "Russell", Borrowed_status: false, Price: 400 },
+  { Title: "Theory of Computation", Author_name: "Sipser", Borrowed_status: true, Price: 300 },
+  { Title: "DBMS Concepts", Author_name: "Korth", Borrowed_status: false, Price: 420 },
+  { Title: "Data Science", Author_name: "Russell", Borrowed_status: true, Price: 600 }
+])
+```
+
+✅ **8 sample books** with different authors, borrowed status, and prices.
+
+---
+
+## ⚙️ **MapReduce Concept Refresher**
+
+MapReduce in MongoDB uses:
+
+* **Map Function** → Emits a key-value pair.
+* **Reduce Function** → Combines all values for the same key.
+
+**Syntax:**
+
+```javascript
+db.collection.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "output_collection" }
+)
+```
+
+---
+
+## 🧩 **1️⃣ Author-wise list of books**
+
+### 💻 **Map Function:**
+
+```javascript
+var mapFunction1 = function() {
+  emit(this.Author_name, this.Title);
+};
+```
+
+### 💻 **Reduce Function:**
+
+```javascript
+var reduceFunction1 = function(key, values) {
+  return values;
+};
+```
+
+### 💻 **Execute MapReduce:**
+
+```javascript
+db.Book.mapReduce(
+  mapFunction1,
+  reduceFunction1,
+  { out: "Author_Wise_Books" }
+)
+```
+
+### 💻 **View Result:**
+
+```javascript
+db.Author_Wise_Books.find().pretty()
+```
+
+### ✅ **Sample Output:**
+
+```json
+{ "_id": "Korth", "value": ["DBMS Concepts"] }
+{ "_id": "Ramakrishnan", "value": ["Database Systems"] }
+{ "_id": "Russell", "value": ["AI Fundamentals", "Machine Learning", "Data Science"] }
+{ "_id": "Silberschatz", "value": ["Operating Systems"] }
+{ "_id": "Sipser", "value": ["Theory of Computation"] }
+{ "_id": "Tanenbaum", "value": ["Computer Networks"] }
+```
+
+---
+
+## 🧩 **2️⃣ Author-wise list of books having Borrowed_status = True**
+
+### 💻 **Map Function:**
+
+```javascript
+var mapFunction2 = function() {
+  if (this.Borrowed_status === true) {
+    emit(this.Author_name, this.Title);
+  }
+};
+```
+
+### 💻 **Reduce Function:**
+
+```javascript
+var reduceFunction2 = function(key, values) {
+  return values;
+};
+```
+
+### 💻 **Execute MapReduce:**
+
+```javascript
+db.Book.mapReduce(
+  mapFunction2,
+  reduceFunction2,
+  { out: "Author_Borrowed_Books" }
+)
+```
+
+### 💻 **View Result:**
+
+```javascript
+db.Author_Borrowed_Books.find().pretty()
+```
+
+### ✅ **Sample Output:**
+
+```json
+{ "_id": "Ramakrishnan", "value": ["Database Systems"] }
+{ "_id": "Russell", "value": ["AI Fundamentals", "Data Science"] }
+{ "_id": "Sipser", "value": ["Theory of Computation"] }
+```
+
+---
+
+## 🧩 **3️⃣ Author-wise list of books having Price > 300**
+
+### 💻 **Map Function:**
+
+```javascript
+var mapFunction3 = function() {
+  if (this.Price > 300) {
+    emit(this.Author_name, this.Title);
+  }
+};
+```
+
+### 💻 **Reduce Function:**
+
+```javascript
+var reduceFunction3 = function(key, values) {
+  return values;
+};
+```
+
+### 💻 **Execute MapReduce:**
+
+```javascript
+db.Book.mapReduce(
+  mapFunction3,
+  reduceFunction3,
+  { out: "Author_Books_Price_GT_300" }
+)
+```
+
+### 💻 **View Result:**
+
+```javascript
+db.Author_Books_Price_GT_300.find().pretty()
+```
+
+### ✅ **Sample Output:**
+
+```json
+{ "_id": "Korth", "value": ["DBMS Concepts"] }
+{ "_id": "Ramakrishnan", "value": ["Database Systems"] }
+{ "_id": "Russell", "value": ["AI Fundamentals", "Machine Learning", "Data Science"] }
+{ "_id": "Tanenbaum", "value": ["Computer Networks"] }
+```
+
+---
+
+## 🧠 **Summary Table**
+
+| Requirement       | Map Condition               | Reduce Output                    | Output Collection           |
+| ----------------- | --------------------------- | -------------------------------- | --------------------------- |
+| Author-wise books | `emit(Author_name, Title)`  | All books by author              | `Author_Wise_Books`         |
+| Borrowed books    | `if(Borrowed_status==true)` | Books borrowed per author        | `Author_Borrowed_Books`     |
+| Price > 300       | `if(Price>300)`             | Books with price >300 per author | `Author_Books_Price_GT_300` |
+
+---
+
+## 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                                    | **Answer**                                                                                                                                          |
+| -------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | What is MapReduce in MongoDB?                                   | It is a data processing technique used to perform aggregation — it maps documents into key-value pairs and then reduces them to summarized results. |
+| 2        | What are the main components of MapReduce?                      | The two main components are **Map function** and **Reduce function**.                                                                               |
+| 3        | What is the role of the Map function?                           | The **Map function** emits key-value pairs based on the logic we define (for example, `emit(author, book)` ).                                       |
+| 4        | What does the Reduce function do?                               | The **Reduce function** processes all values that share the same key and merges them into a single output value.                                    |
+| 5        | What data type does `emit()` use?                               | It emits key-value pairs where the key can be any field (like author) and the value can be an object or array.                                      |
+| 6        | How is MapReduce different from Aggregation Pipeline?           | The Aggregation Pipeline is simpler and faster, whereas MapReduce is more flexible for complex transformations and custom logic.                    |
+| 7        | What is the syntax of `mapReduce()` in MongoDB?                 | `db.collection.mapReduce(mapFunction, reduceFunction, { out: "output_collection" })`                                                                |
+| 8        | What is the purpose of the `out` parameter?                     | It specifies the name of the output collection where results are stored.                                                                            |
+| 9        | Can MapReduce use conditions like `if` statements?              | Yes, the Map function can include conditional logic to emit data only when certain criteria are met.                                                |
+| 10       | How do you view MapReduce results?                              | By using `db.output_collection.find().pretty()`                                                                                                     |
+| 11       | What is the difference between `aggregate()` and `mapReduce()`? | `aggregate()` is faster and suitable for standard grouping/summing, while `mapReduce()` is better for complex or custom operations.                 |
+| 12       | What are the advantages of MapReduce?                           | Handles large data, allows custom logic, supports distributed processing.                                                                           |
+| 13       | What are the disadvantages of MapReduce?                        | Slower than aggregation pipeline, consumes more memory and CPU.                                                                                     |
+
+---
+
+## ✅ **Key Points for Practical Notebook**
+
+* **MapReduce = map() + reduce() + emit()**
+* **Emit structure:** `emit(key, value)`
+* **Reduce function:** Combines values having the same key.
+* **Output stored in new collection (using `out:` option).**
+* **Conditional filters** can be applied inside `map` using `if()`.
+* Useful for **author-wise grouping, summing, filtering, etc.**

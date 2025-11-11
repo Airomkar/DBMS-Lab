@@ -1,0 +1,266 @@
+# 🧾 **Problem Statement 18 (Procedures / Functions)**
+
+---
+
+## 🎯 **Objective:**
+
+To create a **PL/SQL procedure** and **function** for the given Bank schema using **Account** and **Earned_Interest** tables.
+
+---
+
+## 🧩 **Schema:**
+
+* **Account(Account_No, Cust_Name, Balance, NoOfYears)**
+* **Earned_Interest(Account_No, Interest_Amt)**
+
+---
+
+## 💻 **Step 1: Create Tables**
+
+```sql
+CREATE TABLE Account (
+    Account_No NUMBER PRIMARY KEY,
+    Cust_Name VARCHAR2(50),
+    Balance NUMBER(10,2),
+    NoOfYears NUMBER(3)
+);
+
+CREATE TABLE Earned_Interest (
+    Account_No NUMBER,
+    Interest_Amt NUMBER(10,2)
+);
+```
+
+---
+
+## 💻 **Step 2: Insert Sample Data**
+
+```sql
+INSERT INTO Account VALUES (101, 'Rohit', 60000, 2);
+INSERT INTO Account VALUES (102, 'Sneha', 45000, 3);
+INSERT INTO Account VALUES (103, 'Amit', 80000, 1);
+INSERT INTO Account VALUES (104, 'Priya', 30000, 5);
+INSERT INTO Account VALUES (105, 'Karan', 90000, 4);
+COMMIT;
+```
+
+✅ **Sample records inserted successfully.**
+
+---
+
+# 🧩 **1️⃣ PL/SQL PROCEDURE – Calculate and Store Simple Interest**
+
+---
+
+### **Problem:**
+
+Write a PL/SQL procedure to take **Account_No** and **Interest Rate** as input,
+then calculate **Simple Interest (SI = Balance × Rate × Years / 100)**,
+store it in **Earned_Interest** table, and display all records.
+
+---
+
+### 💻 **Procedure Code**
+
+```sql
+CREATE OR REPLACE PROCEDURE Calculate_Interest(
+    p_AccNo IN Account.Account_No%TYPE,
+    p_Rate IN NUMBER
+)
+IS
+    v_Balance Account.Balance%TYPE;
+    v_Years Account.NoOfYears%TYPE;
+    v_Interest NUMBER(10,2);
+BEGIN
+    -- Step 1: Get balance and years for given account
+    SELECT Balance, NoOfYears
+    INTO v_Balance, v_Years
+    FROM Account
+    WHERE Account_No = p_AccNo;
+
+    -- Step 2: Calculate simple interest
+    v_Interest := (v_Balance * p_Rate * v_Years) / 100;
+
+    -- Step 3: Insert into Earned_Interest table
+    INSERT INTO Earned_Interest(Account_No, Interest_Amt)
+    VALUES (p_AccNo, v_Interest);
+
+    DBMS_OUTPUT.PUT_LINE('✅ Interest Calculated and Stored Successfully!');
+
+    -- Step 4: Display Earned_Interest table data
+    DBMS_OUTPUT.PUT_LINE(CHR(10) || '📄 Earned_Interest Table:');
+    FOR rec IN (SELECT * FROM Earned_Interest) LOOP
+        DBMS_OUTPUT.PUT_LINE('Account_No: ' || rec.Account_No ||
+                             ', Interest_Amt: ' || rec.Interest_Amt);
+    END LOOP;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('❌ Account not found!');
+END;
+/
+```
+
+---
+
+### **Execution:**
+
+```sql
+SET SERVEROUTPUT ON;
+EXEC Calculate_Interest(101, 5);
+```
+
+---
+
+### ✅ **Sample Output:**
+
+```
+✅ Interest Calculated and Stored Successfully!
+
+📄 Earned_Interest Table:
+Account_No: 101, Interest_Amt: 6000
+```
+
+**Explanation:**
+
+```
+Interest = (Balance × Rate × Years) / 100
+Interest = (60000 × 5 × 2) / 100 = 6000
+```
+
+---
+
+### **Display Earned_Interest Table**
+
+```sql
+SELECT * FROM Earned_Interest;
+```
+
+| Account_No | Interest_Amt |
+| ---------- | ------------ |
+| 101        | 6000         |
+| 103        | 800          |
+| 105        | 14400        |
+
+---
+
+# 🧩 **2️⃣ PL/SQL FUNCTION – Display Accounts with Balance > 50,000**
+
+---
+
+### **Problem:**
+
+Write a PL/SQL function to return all records from **Account** table where **Balance > 50,000**.
+
+---
+
+### 💻 **Function Code**
+
+```sql
+CREATE OR REPLACE FUNCTION Get_HighBalance_Accounts
+RETURN SYS_REFCURSOR
+IS
+    highbal_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN highbal_cursor FOR
+        SELECT * FROM Account WHERE Balance > 50000;
+    RETURN highbal_cursor;
+END;
+/
+```
+
+---
+
+### **Execution (Using Cursor Display Block)**
+
+```sql
+SET SERVEROUTPUT ON;
+
+DECLARE
+    c SYS_REFCURSOR;
+    v_Acc Account.Account_No%TYPE;
+    v_Name Account.Cust_Name%TYPE;
+    v_Balance Account.Balance%TYPE;
+    v_Years Account.NoOfYears%TYPE;
+BEGIN
+    c := Get_HighBalance_Accounts;
+    DBMS_OUTPUT.PUT_LINE('📄 Accounts with Balance > 50,000:');
+    LOOP
+        FETCH c INTO v_Acc, v_Name, v_Balance, v_Years;
+        EXIT WHEN c%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Account_No: ' || v_Acc ||
+                             ', Name: ' || v_Name ||
+                             ', Balance: ' || v_Balance ||
+                             ', Years: ' || v_Years);
+    END LOOP;
+    CLOSE c;
+END;
+/
+```
+
+---
+
+### ✅ **Sample Output:**
+
+```
+📄 Accounts with Balance > 50,000:
+Account_No: 101, Name: Rohit, Balance: 60000, Years: 2
+Account_No: 103, Name: Amit, Balance: 80000, Years: 1
+Account_No: 105, Name: Karan, Balance: 90000, Years: 4
+```
+
+---
+
+# ✅ **Summary of Both Programs**
+
+| Sr. | Type      | Name                       | Input            | Output                            | Description                            |
+| --- | --------- | -------------------------- | ---------------- | --------------------------------- | -------------------------------------- |
+| 1   | Procedure | `Calculate_Interest`       | Account_No, Rate | Inserts data into Earned_Interest | Calculates and stores simple interest  |
+| 2   | Function  | `Get_HighBalance_Accounts` | None             | Returns cursor                    | Displays records with Balance > 50,000 |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS AND ANSWERS**
+
+| **Q.No** | **Question**                                               | **Answer**                                                                                               |
+| -------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1        | What is a PL/SQL Procedure?                                | A procedure is a subprogram that performs a specific task and does not necessarily return a value.       |
+| 2        | What is a PL/SQL Function?                                 | A function is a subprogram that performs a task and **must return a value**.                             |
+| 3        | Difference between Procedure and Function?                 | A function returns a value and can be used in SQL queries; a procedure does not return a value directly. |
+| 4        | How do you pass parameters in PL/SQL?                      | Using IN, OUT, and IN OUT modes.                                                                         |
+| 5        | What are the parameter modes in PL/SQL?                    | **IN** → Input only; **OUT** → Output only; **IN OUT** → Both input and output.                          |
+| 6        | What is a Cursor?                                          | A pointer to a result set of a query; used for row-by-row data retrieval.                                |
+| 7        | What is the use of `DBMS_OUTPUT.PUT_LINE()`?               | It displays output text in the SQL Developer or SQL*Plus console.                                        |
+| 8        | What is Simple Interest formula?                           | **SI = (Principal × Rate × Time) / 100**                                                                 |
+| 9        | What is `SYS_REFCURSOR`?                                   | A data type in PL/SQL that holds the result of a query and allows iteration over multiple rows.          |
+| 10       | Can we call a function inside a procedure?                 | Yes, a function can be called within a procedure.                                                        |
+| 11       | Can we use a procedure inside a SELECT statement?          | No, only functions can be used in SELECT statements.                                                     |
+| 12       | What is an exception in PL/SQL?                            | It is an error condition that interrupts normal program execution.                                       |
+| 13       | What does `NO_DATA_FOUND` mean?                            | It occurs when a SELECT INTO statement returns no rows.                                                  |
+| 14       | What is the use of COMMIT in PL/SQL?                       | To make changes permanent in the database after insert, update, or delete.                               |
+| 15       | What are the advantages of using Procedures and Functions? | Code reusability, modularity, performance improvement, and better maintainability.                       |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **Procedure Syntax:**
+
+  ```sql
+  CREATE OR REPLACE PROCEDURE name (params) IS ... BEGIN ... END;
+  ```
+* **Function Syntax:**
+
+  ```sql
+  CREATE OR REPLACE FUNCTION name RETURN datatype IS ... BEGIN ... RETURN value; END;
+  ```
+* **Simple Interest Formula:** `(Balance * Rate * Years) / 100`
+* **Cursor Type:** `SYS_REFCURSOR` → used for returning query results.
+* **Display Data:** `DBMS_OUTPUT.PUT_LINE()`
+
+---
+
+✅ **Final Summary:**
+
+* You created a **procedure** for calculating interest and inserting it into `Earned_Interest`.
+* You created a **function** that returns high-balance customers.
+* You demonstrated **database operations**, **parameter handling**, and **cursor usage**.

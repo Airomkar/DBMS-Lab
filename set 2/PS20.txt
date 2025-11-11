@@ -1,0 +1,216 @@
+# 🧾 **Problem Statement 20 — Implement MySQL Database Connectivity with PHP**
+
+---
+
+## 🎯 **Objective:**
+
+To establish a connection between **PHP** and **MySQL**, and perform basic operations such as connecting to the database and fetching records.
+
+---
+
+## ⚙️ **Software Requirements:**
+
+* **XAMPP / WAMP / LAMP** Server (with Apache & MySQL)
+* **PHP 7 or later**
+* **MySQL** database
+* **Web browser** (e.g., Chrome)
+* **Text editor / IDE** (e.g., Visual Studio Code)
+
+---
+
+## 💻 **Step 1: Create Database and Table in MySQL**
+
+Run these SQL commands in **phpMyAdmin** or MySQL terminal:
+
+```sql
+CREATE DATABASE CollegeDB;
+
+USE CollegeDB;
+
+CREATE TABLE Student (
+    Roll_No INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Class VARCHAR(20),
+    Marks INT
+);
+
+INSERT INTO Student VALUES
+(101, 'Rohit', 'TE', 78),
+(102, 'Sneha', 'BE', 88),
+(103, 'Amit', 'SE', 91),
+(104, 'Priya', 'TE', 69);
+```
+
+✅ **Database “CollegeDB” created with table “Student” and 4 records.**
+
+---
+
+## 💻 **Step 2: Create PHP File for MySQL Connectivity**
+
+**Filename:** `connect_mysql.php`
+
+```php
+<?php
+// Step 1: Define database connection variables
+$servername = "localhost";   // Server name
+$username = "root";          // Default username in XAMPP/WAMP
+$password = "";              // Default password is empty
+$dbname = "CollegeDB";       // Database name
+
+// Step 2: Create connection using mysqli
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Step 3: Check connection
+if ($conn->connect_error) {
+    die("❌ Connection failed: " . $conn->connect_error);
+}
+echo "✅ Connected successfully to MySQL database!<br><br>";
+
+// Step 4: Execute SQL query
+$sql = "SELECT * FROM Student";
+$result = $conn->query($sql);
+
+// Step 5: Display records if available
+if ($result->num_rows > 0) {
+    echo "<h3>📄 Student Table Data:</h3>";
+    echo "<table border='1' cellpadding='5'>
+            <tr><th>Roll No</th><th>Name</th><th>Class</th><th>Marks</th></tr>";
+    
+    // Output data of each row
+    while ($row = $result->fetch_assoc()) {
+        echo "<tr>
+                <td>" . $row["Roll_No"] . "</td>
+                <td>" . $row["Name"] . "</td>
+                <td>" . $row["Class"] . "</td>
+                <td>" . $row["Marks"] . "</td>
+              </tr>";
+    }
+    echo "</table>";
+} else {
+    echo "No records found!";
+}
+
+// Step 6: Close the connection
+$conn->close();
+?>
+```
+
+---
+
+## 💻 **Step 3: Run the Program**
+
+1. Save the file as **`connect_mysql.php`** in the folder:
+
+   ```
+   C:\xampp\htdocs\CollegeDB\
+   ```
+2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
+3. Open your browser and visit:
+
+   ```
+   http://localhost/CollegeDB/connect_mysql.php
+   ```
+
+---
+
+## 🧾 **Sample Output:**
+
+```
+✅ Connected successfully to MySQL database!
+
+📄 Student Table Data:
+
++---------+--------+-------+--------+
+| Roll No | Name   | Class | Marks  |
++---------+--------+-------+--------+
+| 101     | Rohit  | TE    | 78     |
+| 102     | Sneha  | BE    | 88     |
+| 103     | Amit   | SE    | 91     |
+| 104     | Priya  | TE    | 69     |
++---------+--------+-------+--------+
+```
+
+---
+
+## ✅ **Explanation of the Code**
+
+| Step  | Description                                                           |
+| ----- | --------------------------------------------------------------------- |
+| **1** | Database connection details (`localhost`, `root`, password, DB name). |
+| **2** | Connection established using `new mysqli()`.                          |
+| **3** | Checked for successful connection using `$conn->connect_error`.       |
+| **4** | SQL query executed using `$conn->query($sql)`.                        |
+| **5** | Fetched data using `$result->fetch_assoc()` in a loop.                |
+| **6** | Closed the connection using `$conn->close()`.                         |
+
+---
+
+## ⚙️ **Alternative Connection Method (PDO in PHP)**
+
+You can also use **PHP Data Objects (PDO)** for a more secure connection:
+
+```php
+<?php
+try {
+    $conn = new PDO("mysql:host=localhost;dbname=CollegeDB", "root", "");
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    echo "✅ Connected successfully using PDO!";
+} catch (PDOException $e) {
+    echo "❌ Connection failed: " . $e->getMessage();
+}
+?>
+```
+
+---
+
+# ✅ **Summary of Key Functions**
+
+| Function               | Description                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `mysqli_connect()`     | Establishes a connection to MySQL server                                     |
+| `mysqli_query()`       | Executes an SQL query                                                        |
+| `mysqli_fetch_assoc()` | Fetches query result row as an associative array                             |
+| `mysqli_close()`       | Closes the MySQL connection                                                  |
+| `PDO`                  | PHP Data Object — an alternative and more secure way to connect to databases |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                          | **Answer**                                                                                        |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 1        | What is PHP?                                          | PHP (Hypertext Preprocessor) is a server-side scripting language used for web development.        |
+| 2        | How do you connect PHP to MySQL?                      | Using `mysqli` or `PDO` extension.                                                                |
+| 3        | What does `mysqli` stand for?                         | MySQL Improved — it provides an enhanced interface for MySQL in PHP.                              |
+| 4        | What are the steps for connecting PHP to MySQL?       | (1) Connect using `mysqli_connect()`, (2) Execute query, (3) Fetch results, (4) Close connection. |
+| 5        | What function is used to connect to a MySQL database? | `mysqli_connect()` or `new mysqli()`.                                                             |
+| 6        | What is the default username and password in XAMPP?   | Username: `root`, Password: (empty).                                                              |
+| 7        | How do you check if the connection was successful?    | Using `if ($conn->connect_error)` condition.                                                      |
+| 8        | What is the difference between `mysqli` and `PDO`?    | `PDO` supports multiple databases; `mysqli` works only with MySQL.                                |
+| 9        | How do you fetch query results in PHP?                | Using `$result->fetch_assoc()` inside a while loop.                                               |
+| 10       | How can you close a MySQL connection in PHP?          | By calling `$conn->close()`.                                                                      |
+| 11       | What is the use of `phpMyAdmin`?                      | It is a web interface to manage MySQL databases easily.                                           |
+| 12       | What is the default port number of MySQL?             | Port number `3306`.                                                                               |
+| 13       | What are the common MySQL data types?                 | `INT`, `VARCHAR`, `DATE`, `DECIMAL`, `FLOAT`, etc.                                                |
+| 14       | What are the advantages of connecting PHP with MySQL? | Dynamic website content, real-time data handling, easy integration.                               |
+| 15       | What happens if the connection fails?                 | An error message is shown using `die()` or `try-catch` block.                                     |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* PHP uses **server-side execution** (code runs on server, not browser).
+* MySQL connectivity requires either `mysqli` or `PDO`.
+* `mysqli` provides **object-oriented** and **procedural** syntax.
+* Always close the connection after execution (`$conn->close()`).
+* Use **XAMPP/WAMP** for local server testing.
+* Connection errors should be handled gracefully.
+
+---
+
+✅ **Final Summary**
+
+* Created a **MySQL database** and **Student** table.
+* Connected PHP with MySQL using **mysqli**.
+* Displayed data dynamically in a table format.
+* Learned **connection, query execution, and data retrieval**.

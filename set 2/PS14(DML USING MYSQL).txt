@@ -1,0 +1,276 @@
+# 🧾 **Problem Statement 14 (DML USING MYSQL)**
+
+---
+
+### **Tables:**
+
+1. **Customer** (`CustID`, `Name`, `Cust_Address`, `Phone_no`, `Email_ID`, `Age`)
+2. **Branch** (`Branch_ID`, `Branch_Name`, `Address`)
+3. **Account** (`Account_no`, `Branch_ID`, `CustID`, `date_open`, `Account_type`, `Balance`)
+
+---
+
+## 💻 **Step 1: Create Database**
+
+```sql
+CREATE DATABASE BankDB;
+USE BankDB;
+```
+
+---
+
+## 💻 **Step 2: Create Tables**
+
+```sql
+CREATE TABLE Customer (
+    CustID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Cust_Address VARCHAR(100),
+    Phone_no VARCHAR(15),
+    Email_Address VARCHAR(30),
+    Age INT
+);
+
+CREATE TABLE Branch (
+    Branch_ID INT PRIMARY KEY,
+    Branch_Name VARCHAR(50),
+    Address VARCHAR(100)
+);
+
+CREATE TABLE Account (
+    Account_no INT PRIMARY KEY,
+    Branch_ID INT,
+    CustID INT,
+    date_open DATE,
+    Account_type VARCHAR(30),
+    Balance DECIMAL(10,2),
+    FOREIGN KEY (Branch_ID) REFERENCES Branch(Branch_ID),
+    FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+```
+
+---
+
+## 💻 **Step 3: Insert Sample Data**
+
+```sql
+INSERT INTO Customer VALUES
+(101, 'Rohit', 'Pune', '9876543210', 'rohit@gmail.com', 35),
+(102, 'Sneha', 'Mumbai', '9765432100', 'sneha@gmail.com', 28),
+(103, 'Amit', 'Pune', '9999999999', 'amit@gmail.com', 42),
+(104, 'Karan', 'Nashik', '9090909090', 'karan@gmail.com', 50),
+(105, 'Priya', 'Pune', '8888888888', 'priya@gmail.com', 33);
+
+INSERT INTO Branch VALUES
+(1, 'Main Branch', 'Pune'),
+(2, 'South Branch', 'Mumbai'),
+(3, 'East Branch', 'Nashik');
+
+INSERT INTO Account VALUES
+(2001, 1, 101, '2018-08-15', 'Saving Account', 75000),
+(2002, 2, 102, '2018-09-10', 'Current Account', 85000),
+(2003, 1, 103, '2019-01-12', 'Saving Account', 30000),
+(2004, 3, 104, '2017-07-11', 'Saving Account', 20000),
+(2005, 1, 105, '2020-05-05', 'Saving Account', 90000);
+```
+
+✅ **Data inserted successfully.**
+
+---
+
+# 🧩 **Now Solve the Questions**
+
+---
+
+## **1️⃣ Modify the size of column “Email_Address” to 20 in Customer table**
+
+```sql
+ALTER TABLE Customer MODIFY Email_Address VARCHAR(20);
+```
+
+✅ **Explanation:**
+Changes the size (length) of the existing column `Email_Address` to 20 characters.
+
+---
+
+## **2️⃣ Change the column “Email_Address” to NOT NULL in Customer table**
+
+```sql
+ALTER TABLE Customer MODIFY Email_Address VARCHAR(20) NOT NULL;
+```
+
+✅ **Explanation:**
+Ensures that `Email_Address` cannot have NULL values for any customer record.
+
+---
+
+## **3️⃣ Display the total customers with balance > 50,000**
+
+```sql
+SELECT COUNT(DISTINCT c.CustID) AS Total_Customers
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Balance > 50000;
+```
+
+✅ **Explanation:**
+
+* Joins **Customer** and **Account** tables.
+* Uses `COUNT(DISTINCT CustID)` to count unique customers with balance above ₹50,000.
+
+**Sample Output:**
+
+| Total_Customers |
+| --------------- |
+| 3               |
+
+---
+
+## **4️⃣ Display average balance for Account_type = “Saving Account”**
+
+```sql
+SELECT AVG(Balance) AS Avg_Balance_Saving
+FROM Account
+WHERE Account_type = 'Saving Account';
+```
+
+✅ **Explanation:**
+Calculates the **average balance** for all accounts with type “Saving Account”.
+
+**Sample Output:**
+
+| Avg_Balance_Saving |
+| ------------------ |
+| 53750.00           |
+
+---
+
+## **5️⃣ Display customer details that live in Pune OR name starts with ‘A’**
+
+```sql
+SELECT * 
+FROM Customer
+WHERE Cust_Address = 'Pune' OR Name LIKE 'A%';
+```
+
+✅ **Explanation:**
+
+* Filters customers who **live in Pune** or whose **name begins with “A”**.
+* Uses the `LIKE` operator for pattern matching.
+
+**Sample Output:**
+
+| CustID | Name  | Cust_Address | Phone_no   | Email_Address                             | Age |
+| ------ | ----- | ------------ | ---------- | ----------------------------------------- | --- |
+| 101    | Rohit | Pune         | 9876543210 | [rohit@gmail.com](mailto:rohit@gmail.com) | 35  |
+| 103    | Amit  | Pune         | 9999999999 | [amit@gmail.com](mailto:amit@gmail.com)   | 42  |
+| 105    | Priya | Pune         | 8888888888 | [priya@gmail.com](mailto:priya@gmail.com) | 33  |
+
+---
+
+## **6️⃣ Create a table `Saving_Account` using Account Table**
+
+```sql
+CREATE TABLE Saving_Account AS
+SELECT Account_no, Branch_ID, CustID, date_open, Balance
+FROM Account
+WHERE Account_type = 'Saving Account';
+```
+
+✅ **Explanation:**
+
+* Creates a new table **Saving_Account** containing data copied from the **Account** table.
+* Only records with **Account_type = 'Saving Account'** are included.
+
+**Sample Output (Saved Table):**
+
+| Account_no | Branch_ID | CustID | date_open  | Balance |
+| ---------- | --------- | ------ | ---------- | ------- |
+| 2001       | 1         | 101    | 2018-08-15 | 75000   |
+| 2003       | 1         | 103    | 2019-01-12 | 30000   |
+| 2004       | 3         | 104    | 2017-07-11 | 20000   |
+| 2005       | 1         | 105    | 2020-05-05 | 90000   |
+
+---
+
+## **7️⃣ Display customer details age-wise with balance ≥ 20,000**
+
+```sql
+SELECT c.CustID, c.Name, c.Age, a.Balance
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Balance >= 20000
+ORDER BY c.Age ASC;
+```
+
+✅ **Explanation:**
+
+* Joins Customer and Account tables.
+* Filters accounts having balance ≥ ₹20,000.
+* Sorts the result by **Age** in ascending order.
+
+**Sample Output:**
+
+| CustID | Name  | Age | Balance |
+| ------ | ----- | --- | ------- |
+| 102    | Sneha | 28  | 85000   |
+| 105    | Priya | 33  | 90000   |
+| 101    | Rohit | 35  | 75000   |
+| 103    | Amit  | 42  | 30000   |
+| 104    | Karan | 50  | 20000   |
+
+---
+
+# ✅ **Summary of Commands**
+
+| Task                                 | SQL Query                                                         |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| Modify column size                   | `ALTER TABLE Customer MODIFY Email_Address VARCHAR(20);`          |
+| Set NOT NULL                         | `ALTER TABLE Customer MODIFY Email_Address VARCHAR(20) NOT NULL;` |
+| Total customers with balance > 50000 | `COUNT()` with `JOIN`                                             |
+| Average Saving Account balance       | `AVG()` with `WHERE`                                              |
+| Filter by city or name               | `WHERE Cust_Address='Pune' OR Name LIKE 'A%'`                     |
+| Create new table from existing       | `CREATE TABLE ... AS SELECT ...`                                  |
+| Sort by age                          | `ORDER BY Age ASC`                                                |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                      | **Answer**                                                                                                     |
+| -------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1        | What is DML in SQL?                               | DML stands for **Data Manipulation Language**, used to manage data in tables (INSERT, UPDATE, DELETE, SELECT). |
+| 2        | What is DDL in SQL?                               | DDL stands for **Data Definition Language**, used to define or alter table structures (CREATE, ALTER, DROP).   |
+| 3        | What is the difference between DDL and DML?       | DDL changes the **structure** of tables; DML manipulates the **data** within tables.                           |
+| 4        | What is the purpose of the `ALTER TABLE` command? | To modify the structure of an existing table (add, delete, rename, or change column type).                     |
+| 5        | What does the `NOT NULL` constraint do?           | Ensures that a column cannot contain NULL values.                                                              |
+| 6        | What is the use of `COUNT()` function?            | To count the number of records matching a condition.                                                           |
+| 7        | What is the use of `AVG()` function?              | It calculates the average value of a numeric column.                                                           |
+| 8        | What is the use of `LIKE` operator?               | It is used for pattern matching in strings (e.g., names starting with a specific letter).                      |
+| 9        | What does `CREATE TABLE AS SELECT` do?            | Creates a new table and copies data from an existing table based on a query.                                   |
+| 10       | What is the use of `ORDER BY` clause?             | It sorts query results either in ascending (ASC) or descending (DESC) order.                                   |
+| 11       | What is the difference between WHERE and HAVING?  | `WHERE` filters rows before grouping; `HAVING` filters groups after aggregation.                               |
+| 12       | What are Aggregate Functions in SQL?              | Functions like `SUM()`, `AVG()`, `MAX()`, `MIN()`, `COUNT()` that perform calculations on multiple rows.       |
+| 13       | How can we change column datatype or size?        | Using the `ALTER TABLE ... MODIFY` command.                                                                    |
+| 14       | Can we add constraints to an existing column?     | Yes, using `ALTER TABLE ... MODIFY ... CONSTRAINT`.                                                            |
+| 15       | What is the importance of joins in SQL?           | Joins combine data from multiple tables using related columns (usually foreign keys).                          |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **ALTER TABLE** modifies existing table structure.
+* **Aggregate Functions:** `COUNT()`, `AVG()`, `SUM()`, etc.
+* **Filtering:** `WHERE`, `LIKE`, `>`, `<`, `>=`.
+* **Creating Derived Tables:** `CREATE TABLE ... AS SELECT`.
+* **Sorting Results:** `ORDER BY` clause.
+* **Referential Integrity:** Maintained using **FOREIGN KEY**.
+
+---
+
+✅ **Final Summary:**
+
+* Modified and constrained columns.
+* Used aggregate functions (`COUNT`, `AVG`).
+* Created new table from existing data.
+* Used logical operators (`OR`) and sorting (`ORDER BY`).

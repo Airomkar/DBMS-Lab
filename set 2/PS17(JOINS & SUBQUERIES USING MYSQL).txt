@@ -1,0 +1,280 @@
+# 🧾 **Problem Statement 17 — (JOINS & SUBQUERIES USING MYSQL)**
+
+---
+
+## 🎯 **Objective:**
+
+To perform **JOIN** and **SUBQUERY** operations using multiple related tables.
+
+---
+
+## 🧩 **Given Schema**
+
+### **Tables**
+
+1. **Employee** (Employee_id, First_name, Last_name, Hire_date, Salary, Job_title, Manager_id, Department_id)
+2. **Departments** (Department_id, Department_name, Manager_id, Location_id)
+3. **Locations** (Location_id, Street_address, Postal_code, City, State, Country_id)
+4. **Manager** (Manager_id, Manager_name)
+
+---
+
+## 💻 **Step 1: Create Tables with Referential Integrity**
+
+```sql
+CREATE TABLE Manager (
+    Manager_id INT PRIMARY KEY,
+    Manager_name VARCHAR(50)
+);
+
+CREATE TABLE Locations (
+    Location_id INT PRIMARY KEY,
+    Street_address VARCHAR(100),
+    Postal_code VARCHAR(10),
+    City VARCHAR(50),
+    State VARCHAR(50),
+    Country_id VARCHAR(10)
+);
+
+CREATE TABLE Departments (
+    Department_id INT PRIMARY KEY,
+    Department_name VARCHAR(50),
+    Manager_id INT,
+    Location_id INT,
+    FOREIGN KEY (Manager_id) REFERENCES Manager(Manager_id),
+    FOREIGN KEY (Location_id) REFERENCES Locations(Location_id)
+);
+
+CREATE TABLE Employee (
+    Employee_id INT PRIMARY KEY,
+    First_name VARCHAR(50),
+    Last_name VARCHAR(50),
+    Hire_date DATE,
+    Salary DECIMAL(10,2),
+    Job_title VARCHAR(50),
+    Manager_id INT,
+    Department_id INT,
+    FOREIGN KEY (Manager_id) REFERENCES Manager(Manager_id),
+    FOREIGN KEY (Department_id) REFERENCES Departments(Department_id)
+);
+```
+
+✅ Referential integrity established through **foreign keys**.
+
+---
+
+## 💻 **Step 2: Insert Sample Data**
+
+```sql
+INSERT INTO Manager VALUES
+(1, 'Rohit'),
+(2, 'Sneha'),
+(3, 'Amit');
+
+INSERT INTO Locations VALUES
+(101, 'MG Road', '411001', 'Pune', 'Maharashtra', 'IN'),
+(102, 'Linking Road', '400050', 'Mumbai', 'Maharashtra', 'IN'),
+(103, 'IT Park', '560001', 'Bangalore', 'Karnataka', 'IN');
+
+INSERT INTO Departments VALUES
+(10, 'IT', 1, 101),
+(20, 'HR', 2, 102),
+(30, 'Finance', 3, 103);
+
+INSERT INTO Employee VALUES
+(1001, 'Karan', 'Sharma', '2010-05-10', 65000, 'Developer', 1, 10),
+(1002, 'Priya', 'Patil', '2012-07-20', 40000, 'Tester', 1, 10),
+(1003, 'Vikas', 'Singh', '2008-01-12', 75000, 'Analyst', 2, 20),
+(1004, 'Tina', 'Rao', '2018-03-15', 30000, 'Clerk', 3, 30),
+(1005, 'Arjun', 'Deshmukh', '2005-10-05', 90000, 'Manager', 1, 10);
+```
+
+✅ **Sample data inserted successfully.**
+
+---
+
+# 🧩 **Queries**
+
+---
+
+## **1️⃣ Find employees who earn more than the average salary and work in any IT department**
+
+```sql
+SELECT e.First_name, e.Last_name, e.Salary
+FROM Employee e
+JOIN Departments d ON e.Department_id = d.Department_id
+WHERE e.Salary > (SELECT AVG(Salary) FROM Employee)
+  AND d.Department_name LIKE '%IT%';
+```
+
+### ✅ **Explanation:**
+
+* Subquery finds the **average salary** of all employees.
+* Outer query filters employees with salaries above that average.
+* `LIKE '%IT%'` ensures only IT department employees are shown.
+
+**Sample Output:**
+
+| First_name | Last_name | Salary |
+| ---------- | --------- | ------ |
+| Karan      | Sharma    | 65000  |
+| Arjun      | Deshmukh  | 90000  |
+
+---
+
+## **2️⃣ Find employees who earn the same salary as the minimum salary for all departments**
+
+```sql
+SELECT First_name, Last_name, Salary
+FROM Employee
+WHERE Salary = (SELECT MIN(Salary) FROM Employee);
+```
+
+### ✅ **Explanation:**
+
+* The subquery gets the **minimum salary** across all departments.
+* Outer query displays employees matching that salary.
+
+**Sample Output:**
+
+| First_name | Last_name | Salary |
+| ---------- | --------- | ------ |
+| Tina       | Rao       | 30000  |
+
+---
+
+## **3️⃣ Display employees whose salary is above average for their own department**
+
+```sql
+SELECT e.Employee_id, e.First_name, e.Last_name, e.Salary, e.Department_id
+FROM Employee e
+WHERE e.Salary > (
+    SELECT AVG(Salary)
+    FROM Employee
+    WHERE Department_id = e.Department_id
+);
+```
+
+### ✅ **Explanation:**
+
+* The subquery calculates the **average salary per department**.
+* The outer query compares each employee’s salary with their department’s average.
+
+**Sample Output:**
+
+| Employee_id | First_name | Last_name | Salary | Department_id |
+| ----------- | ---------- | --------- | ------ | ------------- |
+| 1001        | Karan      | Sharma    | 65000  | 10            |
+| 1003        | Vikas      | Singh     | 75000  | 20            |
+| 1005        | Arjun      | Deshmukh  | 90000  | 10            |
+
+---
+
+## **4️⃣ Display the department name, manager name, and city**
+
+```sql
+SELECT d.Department_name, m.Manager_name, l.City
+FROM Departments d
+JOIN Manager m ON d.Manager_id = m.Manager_id
+JOIN Locations l ON d.Location_id = l.Location_id;
+```
+
+### ✅ **Explanation:**
+
+* Joins **Departments**, **Manager**, and **Locations** tables.
+* Displays which manager handles which department and where it is located.
+
+**Sample Output:**
+
+| Department_name | Manager_name | City      |
+| --------------- | ------------ | --------- |
+| IT              | Rohit        | Pune      |
+| HR              | Sneha        | Mumbai    |
+| Finance         | Amit         | Bangalore |
+
+---
+
+## **5️⃣ Display managers with experience greater than 15 years**
+
+```sql
+SELECT e.First_name, e.Last_name, e.Hire_date, e.Salary
+FROM Employee e
+WHERE e.Job_title = 'Manager'
+  AND TIMESTAMPDIFF(YEAR, e.Hire_date, CURDATE()) > 15;
+```
+
+### ✅ **Explanation:**
+
+* `TIMESTAMPDIFF(YEAR, Hire_date, CURDATE())` calculates **experience**.
+* Filters employees whose **job title = Manager** and **experience > 15 years**.
+
+**Sample Output:**
+
+| First_name | Last_name | Hire_date  | Salary |
+| ---------- | --------- | ---------- | ------ |
+| Arjun      | Deshmukh  | 2005-10-05 | 90000  |
+
+---
+
+# ✅ **Summary of Queries**
+
+| No | Type                 | Description                          |
+| -- | -------------------- | ------------------------------------ |
+| 1  | Join + Subquery      | Salary > average and department = IT |
+| 2  | Subquery             | Salary = minimum salary              |
+| 3  | Correlated Subquery  | Salary > department average          |
+| 4  | Join                 | Show department name, manager, city  |
+| 5  | Condition + Function | Managers with >15 years experience   |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS AND ANSWERS**
+
+| **Q.No** | **Question**                                                | **Answer**                                                                                      |
+| -------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1        | What is a JOIN in SQL?                                      | A JOIN combines rows from two or more tables based on a related column between them.            |
+| 2        | What are the types of JOINS in SQL?                         | INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN.                                             |
+| 3        | What is an INNER JOIN?                                      | It returns only the rows that have matching values in both tables.                              |
+| 4        | What is a SUBQUERY?                                         | A query inside another SQL query used to perform intermediate calculations.                     |
+| 5        | What is the difference between JOIN and SUBQUERY?           | A JOIN combines data from multiple tables; a SUBQUERY performs a query inside another query.    |
+| 6        | What is a CORRELATED SUBQUERY?                              | A subquery that refers to columns of the outer query.                                           |
+| 7        | Which clause is used to join tables?                        | The `JOIN` clause along with `ON` condition.                                                    |
+| 8        | What is the purpose of `AVG()` function?                    | It calculates the average of numeric column values.                                             |
+| 9        | What is `MIN()` function used for?                          | To find the minimum value in a column.                                                          |
+| 10       | What is the use of `TIMESTAMPDIFF()` function?              | To calculate the difference between two date/time values.                                       |
+| 11       | What is the difference between `WHERE` and `HAVING`?        | `WHERE` filters rows before grouping; `HAVING` filters after aggregation.                       |
+| 12       | How do you calculate employee experience in SQL?            | Using `TIMESTAMPDIFF(YEAR, hire_date, CURDATE())`.                                              |
+| 13       | What is the difference between primary key and foreign key? | Primary key uniquely identifies rows; foreign key establishes relationships between tables.     |
+| 14       | What is referential integrity?                              | It ensures relationships between tables remain consistent using foreign keys.                   |
+| 15       | What are aggregate functions in SQL?                        | Functions that perform calculations on sets of values like `SUM`, `AVG`, `MIN`, `MAX`, `COUNT`. |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **JOIN Syntax:**
+
+  ```sql
+  SELECT columns
+  FROM table1
+  JOIN table2 ON table1.col = table2.col;
+  ```
+* **Subquery Syntax:**
+
+  ```sql
+  SELECT column
+  FROM table
+  WHERE column > (SELECT AVG(column) FROM table);
+  ```
+* **Correlated Subquery:** references the outer query column.
+* **Aggregate Functions:** `SUM()`, `AVG()`, `MIN()`, `MAX()`, `COUNT()`.
+* **Date Function:** `TIMESTAMPDIFF(YEAR, date1, date2)` → returns year difference.
+
+---
+
+✅ **Final Summary**
+
+* You created **4 related tables** with foreign keys.
+* You practiced **INNER JOIN**, **subqueries**, and **correlated subqueries**.
+* You used **aggregate** and **date functions**.
+* Queries covered **realistic HR scenarios** (salary comparison, manager experience, etc.).

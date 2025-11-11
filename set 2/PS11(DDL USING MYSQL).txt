@@ -1,0 +1,257 @@
+# 🧾 **Problem Statement 11 (DDL USING MYSQL)**
+
+---
+
+## **Schema**
+
+* **Customer** (`CustID`, `Name`, `Cust_Address`, `Phone_no`, `Email_ID`, `Age`)
+* **Branch** (`Branch_ID`, `Branch_Name`, `Address`)
+* **Account** (`Account_no`, `Branch_ID`, `CustID`, `date_open`, `Account_type`, `Balance`)
+
+---
+
+## 💻 **Step 1: Create Database**
+
+```sql
+CREATE DATABASE BankDB;
+USE BankDB;
+```
+
+---
+
+## 💻 **Step 2: Create Tables with Referential Integrity**
+
+```sql
+CREATE TABLE Customer (
+    CustID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Cust_Address VARCHAR(100),
+    Phone_no VARCHAR(15),
+    Email_ID VARCHAR(50),
+    Age INT
+);
+
+CREATE TABLE Branch (
+    Branch_ID INT PRIMARY KEY,
+    Branch_Name VARCHAR(50),
+    Address VARCHAR(100)
+);
+
+CREATE TABLE Account (
+    Account_no INT PRIMARY KEY,
+    Branch_ID INT,
+    CustID INT,
+    date_open DATE,
+    Account_type VARCHAR(30),
+    Balance DECIMAL(10,2),
+    FOREIGN KEY (Branch_ID) REFERENCES Branch(Branch_ID),
+    FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+```
+
+✅ **Explanation:**
+
+* **Primary Key:** Unique for each record.
+* **Foreign Key:** Maintains relationship integrity between tables (links `Account` → `Customer` and `Branch`).
+
+---
+
+## 💻 **Step 3: Insert Sample Data**
+
+```sql
+INSERT INTO Customer VALUES
+(101, 'Rohit', 'Pune', '9876543210', 'rohit@gmail.com', 35),
+(102, 'Sneha', 'Mumbai', '9765432100', 'sneha@gmail.com', 28),
+(103, 'Amit', 'Nashik', '9999999999', 'amit@gmail.com', 50),
+(104, 'Priya', 'Kolhapur', '9090909090', 'priya@gmail.com', 42);
+
+INSERT INTO Branch VALUES
+(1, 'Main Branch', 'Pune'),
+(2, 'South Branch', 'Mumbai'),
+(3, 'North Branch', 'Nashik');
+
+INSERT INTO Account VALUES
+(1001, 1, 101, '2018-08-16', 'Saving', 45000),
+(1002, 2, 102, '2017-02-16', 'Current', 65000),
+(1003, 1, 103, '2018-04-16', 'Saving', 55000),
+(1004, 3, 104, '2019-01-10', 'Saving', 70000);
+```
+
+✅ **Data inserted successfully.**
+
+---
+
+## 💻 **Step 4: Create Index on Primary Key of Account Table**
+
+```sql
+CREATE INDEX idx_account_no ON Account(Account_no);
+```
+
+✅ **Explanation:**
+Indexes improve performance for queries searching by `Account_no`.
+
+---
+
+## 💻 **Step 5: Create a View – Customer_Info for age less than 45**
+
+```sql
+CREATE VIEW Customer_Info AS
+SELECT * FROM Customer
+WHERE Age < 45;
+```
+
+✅ **Explanation:**
+A **View** is a virtual table based on a query.
+Here, it shows only customers younger than 45.
+
+**To see the view:**
+
+```sql
+SELECT * FROM Customer_Info;
+```
+
+**Sample Output:**
+
+| CustID | Name  | Cust_Address | Phone_no   | Email_ID                                  | Age |
+| ------ | ----- | ------------ | ---------- | ----------------------------------------- | --- |
+| 101    | Rohit | Pune         | 9876543210 | [rohit@gmail.com](mailto:rohit@gmail.com) | 35  |
+| 102    | Sneha | Mumbai       | 9765432100 | [sneha@gmail.com](mailto:sneha@gmail.com) | 28  |
+| 104    | Priya | Kolhapur     | 9090909090 | [priya@gmail.com](mailto:priya@gmail.com) | 42  |
+
+---
+
+## 💻 **Step 6: Update the View with `date_open` = 16/04/2017**
+
+> ⚠️ Note: The `date_open` field exists in the **Account** table, not **Customer**, so we join both tables in the view.
+
+```sql
+CREATE OR REPLACE VIEW Customer_Info AS
+SELECT c.CustID, c.Name, c.Cust_Address, c.Phone_no, c.Email_ID, c.Age, a.date_open
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE c.Age < 45;
+```
+
+Now update the `date_open` in the view:
+
+```sql
+UPDATE Customer_Info
+SET date_open = '2017-04-16'
+WHERE CustID = 101;
+```
+
+✅ **Explanation:**
+Updating the view updates the base table as long as the view includes key columns from one table.
+
+---
+
+## 💻 **Step 7: Create a Sequence on Branch Table**
+
+> ✅ In MySQL 8.0+, **sequences** are supported.
+
+```sql
+CREATE SEQUENCE branch_seq
+START WITH 4
+INCREMENT BY 1;
+```
+
+To use the sequence while inserting a new record:
+
+```sql
+INSERT INTO Branch (Branch_ID, Branch_Name, Address)
+VALUES (NEXT VALUE FOR branch_seq, 'East Branch', 'Thane');
+```
+
+✅ **Explanation:**
+Each new record auto-increments the `Branch_ID` starting from 4.
+
+---
+
+## 💻 **Step 8: Create a Synonym `Branch_info` for Branch Table**
+
+> ⚠️ MySQL does **not support synonyms** (they are Oracle-specific).
+> We can simulate it using a **VIEW**.
+
+```sql
+CREATE VIEW Branch_info AS
+SELECT * FROM Branch;
+```
+
+✅ **Explanation:**
+This acts as an alias or synonym for the `Branch` table.
+
+---
+
+# 🧩 **ER Diagram (Entity Relationship Diagram)**
+
+### Entities:
+
+1. **Customer**
+2. **Branch**
+3. **Account**
+
+### Relationships:
+
+* One **Customer** → can have many **Accounts**
+* One **Branch** → can have many **Accounts**
+
+### **ER Model (Text Description):**
+
+```
+Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)
+        |1
+        |
+        |∞
+Account (Account_no, Branch_ID, CustID, date_open, Account_type, Balance)
+        |∞
+        |
+        |1
+Branch (Branch_ID, Branch_Name, Address)
+```
+
+---
+
+# ✅ **Summary of Commands**
+
+| Task            | Command                                                   |
+| --------------- | --------------------------------------------------------- |
+| Create tables   | `CREATE TABLE ...` with `PRIMARY KEY` and `FOREIGN KEY`   |
+| Insert data     | `INSERT INTO table VALUES(...)`                           |
+| Create index    | `CREATE INDEX idx_account_no ON Account(Account_no)`      |
+| Create view     | `CREATE VIEW Customer_Info AS ...`                        |
+| Update view     | `UPDATE Customer_Info SET date_open = ...`                |
+| Create sequence | `CREATE SEQUENCE branch_seq START WITH 4 INCREMENT BY 1;` |
+| Create synonym  | `CREATE VIEW Branch_info AS SELECT * FROM Branch;`        |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS AND ANSWERS**
+
+| **Q.No** | **Question**                                       | **Answer**                                                                                                     |
+| -------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1        | What is DDL in SQL?                                | DDL stands for Data Definition Language — used to define and modify database structures (CREATE, ALTER, DROP). |
+| 2        | What is Referential Integrity?                     | It ensures foreign key values always match primary key values in related tables.                               |
+| 3        | What is an Index?                                  | An index improves the speed of data retrieval by creating a lookup structure for specified columns.            |
+| 4        | What is a View?                                    | A view is a virtual table based on a query that displays data from one or more tables.                         |
+| 5        | Can a view be updated?                             | Yes, if it is based on a single table and does not use aggregation or group functions.                         |
+| 6        | What is a Sequence?                                | A sequence generates unique numeric values automatically, usually used for primary keys.                       |
+| 7        | What is the use of Synonym in SQL?                 | A synonym provides an alternative name for a table, view, or other database object (mainly in Oracle).         |
+| 8        | What is the difference between a View and a Table? | A table stores data physically, while a view is a logical representation of a query.                           |
+| 9        | What are Constraints?                              | Constraints enforce rules on data (e.g., PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, NOT NULL).                   |
+| 10       | How do you create a foreign key in SQL?            | Using `FOREIGN KEY (col) REFERENCES other_table(col)`.                                                         |
+| 11       | What is the purpose of Primary Key?                | To uniquely identify each record in a table.                                                                   |
+| 12       | What is the difference between DDL and DML?        | DDL changes database structure; DML changes data.                                                              |
+| 13       | Can we have multiple foreign keys in a table?      | Yes, a table can reference multiple parent tables.                                                             |
+| 14       | What is the use of `CREATE SEQUENCE`?              | It generates unique IDs automatically, which is useful for primary keys.                                       |
+| 15       | What is the benefit of using Indexes?              | They make queries faster but can slow down insert/update operations slightly.                                  |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **DDL Commands:** `CREATE`, `ALTER`, `DROP`, `TRUNCATE`, `RENAME`
+* **Referential Integrity:** Maintains parent-child relationships.
+* **View:** Logical table (no physical data).
+* **Index:** Improves search speed.
+* **Sequence:** Generates unique numbers automatically.
+* **Synonym:** Alternative name (use VIEW in MySQL).

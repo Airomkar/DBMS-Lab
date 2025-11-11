@@ -1,0 +1,260 @@
+# 🧾 **Problem Statement 13 (Map Reduce)**
+
+**Collection:** `Student`
+**Fields:**
+`roll_no`, `name`, `class`, `dept`, `aggregate_marks`
+
+---
+
+## 💻 **Step 1: Create Database and Collection**
+
+```javascript
+use CollegeDB
+db.createCollection("Student")
+```
+
+---
+
+## 💻 **Step 2: Insert Sample Documents**
+
+```javascript
+db.Student.insertMany([
+  { roll_no: 1, name: "Rohit", class: "TE", dept: "Computer", aggregate_marks: 80 },
+  { roll_no: 2, name: "Sneha", class: "TE", dept: "IT", aggregate_marks: 70 },
+  { roll_no: 3, name: "Amit", class: "TE", dept: "Computer", aggregate_marks: 90 },
+  { roll_no: 4, name: "Karan", class: "SE", dept: "Mechanical", aggregate_marks: 65 },
+  { roll_no: 5, name: "Neha", class: "SE", dept: "Computer", aggregate_marks: 75 },
+  { roll_no: 6, name: "Priya", class: "SE", dept: "IT", aggregate_marks: 68 },
+  { roll_no: 7, name: "Vivek", class: "BE", dept: "Computer", aggregate_marks: 85 },
+  { roll_no: 8, name: "Tina", class: "BE", dept: "Mechanical", aggregate_marks: 72 },
+  { roll_no: 9, name: "Riya", class: "BE", dept: "IT", aggregate_marks: 88 },
+  { roll_no: 10, name: "Arjun", class: "TE", dept: "IT", aggregate_marks: 95 }
+])
+```
+
+✅ **10 student records inserted successfully**
+
+---
+
+# 🧩 **1️⃣ Total Marks of “TE” Class Department-wise**
+
+---
+
+### 💻 **Map Function**
+
+```javascript
+var mapFunction1 = function() {
+  if (this.class === "TE") {
+    emit(this.dept, this.aggregate_marks);
+  }
+};
+```
+
+### 💻 **Reduce Function**
+
+```javascript
+var reduceFunction1 = function(key, values) {
+  return Array.sum(values);
+};
+```
+
+### 💻 **Execute MapReduce**
+
+```javascript
+db.Student.mapReduce(
+  mapFunction1,
+  reduceFunction1,
+  { out: "TotalMarks_TE" }
+)
+```
+
+### 💻 **View Result**
+
+```javascript
+db.TotalMarks_TE.find().pretty()
+```
+
+### ✅ **Expected Output**
+
+```json
+{ "_id": "Computer", "value": 170 }
+{ "_id": "IT", "value": 165 }
+```
+
+✅ **Explanation:**
+
+* For class = "TE", total marks are grouped **department-wise**.
+* `emit(key, value)` → key = dept, value = aggregate_marks.
+* `reduce` sums all marks for each department.
+
+---
+
+# 🧩 **2️⃣ Highest Marks of “SE” Class Department-wise**
+
+---
+
+### 💻 **Map Function**
+
+```javascript
+var mapFunction2 = function() {
+  if (this.class === "SE") {
+    emit(this.dept, this.aggregate_marks);
+  }
+};
+```
+
+### 💻 **Reduce Function**
+
+```javascript
+var reduceFunction2 = function(key, values) {
+  return Math.max.apply(Math, values);
+};
+```
+
+### 💻 **Execute MapReduce**
+
+```javascript
+db.Student.mapReduce(
+  mapFunction2,
+  reduceFunction2,
+  { out: "HighestMarks_SE" }
+)
+```
+
+### 💻 **View Result**
+
+```javascript
+db.HighestMarks_SE.find().pretty()
+```
+
+### ✅ **Expected Output**
+
+```json
+{ "_id": "Computer", "value": 75 }
+{ "_id": "IT", "value": 68 }
+{ "_id": "Mechanical", "value": 65 }
+```
+
+✅ **Explanation:**
+
+* Only considers students in **class = “SE”**.
+* The `reduce` function returns the **maximum** marks for each department.
+
+---
+
+# 🧩 **3️⃣ Average Marks of “BE” Class Department-wise**
+
+---
+
+### 💻 **Map Function**
+
+```javascript
+var mapFunction3 = function() {
+  if (this.class === "BE") {
+    emit(this.dept, { total: this.aggregate_marks, count: 1 });
+  }
+};
+```
+
+### 💻 **Reduce Function**
+
+```javascript
+var reduceFunction3 = function(key, values) {
+  var result = { total: 0, count: 0 };
+  values.forEach(function(value) {
+    result.total += value.total;
+    result.count += value.count;
+  });
+  return result;
+};
+```
+
+### 💻 **Finalize Function** (to calculate average)
+
+```javascript
+var finalizeFunction3 = function(key, reducedValue) {
+  reducedValue.avg = reducedValue.total / reducedValue.count;
+  return reducedValue.avg;
+};
+```
+
+### 💻 **Execute MapReduce**
+
+```javascript
+db.Student.mapReduce(
+  mapFunction3,
+  reduceFunction3,
+  {
+    out: "AverageMarks_BE",
+    finalize: finalizeFunction3
+  }
+)
+```
+
+### 💻 **View Result**
+
+```javascript
+db.AverageMarks_BE.find().pretty()
+```
+
+### ✅ **Expected Output**
+
+```json
+{ "_id": "Computer", "value": 85 }
+{ "_id": "IT", "value": 88 }
+{ "_id": "Mechanical", "value": 72 }
+```
+
+✅ **Explanation:**
+
+* Each record emits `{ total, count }`.
+* Reduce combines totals and counts per department.
+* Finalize calculates **average = total / count**.
+
+---
+
+# 🧠 **Summary of All Three MapReduce Queries**
+
+| Sr. | Requirement   | Class | Operation | Map Logic                    | Reduce Logic        | Output Collection |
+| --- | ------------- | ----- | --------- | ---------------------------- | ------------------- | ----------------- |
+| 1   | Total Marks   | TE    | Sum       | `emit(dept, marks)`          | `Array.sum(values)` | `TotalMarks_TE`   |
+| 2   | Highest Marks | SE    | Max       | `emit(dept, marks)`          | `Math.max.apply()`  | `HighestMarks_SE` |
+| 3   | Average Marks | BE    | Average   | `emit(dept, {total, count})` | Summation + count   | `AverageMarks_BE` |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                                 | **Answer**                                                                                                                          |
+| -------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | What is MapReduce in MongoDB?                                | It is a data processing technique used to aggregate and transform documents into summarized results using map and reduce functions. |
+| 2        | What is the role of the Map function?                        | The Map function processes each document and emits key-value pairs.                                                                 |
+| 3        | What is the role of the Reduce function?                     | The Reduce function combines values associated with the same key to produce a single result.                                        |
+| 4        | What is the use of the `emit()` function?                    | It emits key-value pairs used in the reduce phase.                                                                                  |
+| 5        | What is the purpose of the `finalize` function in MapReduce? | It is used to perform a final transformation on the reduced output, such as calculating averages.                                   |
+| 6        | Can we use conditions in the Map function?                   | Yes, we can use `if` conditions to filter specific data before emitting.                                                            |
+| 7        | What does `Array.sum(values)` do?                            | It adds all numeric values in the array (used for total marks).                                                                     |
+| 8        | What does `Math.max.apply(Math, values)` do?                 | It returns the maximum value from an array (used for highest marks).                                                                |
+| 9        | What is the output of a MapReduce operation?                 | The output is a new collection containing the results of the MapReduce.                                                             |
+| 10       | How do you view the result of a MapReduce operation?         | Using `db.output_collection.find().pretty()`.                                                                                       |
+| 11       | Can MapReduce replace Aggregation Pipelines?                 | Yes, but aggregation pipelines are faster and more efficient for most use cases.                                                    |
+| 12       | What data type can we pass in emit()?                        | Any JSON-compatible key-value pair, such as string, number, or object.                                                              |
+| 13       | What is the difference between Aggregation and MapReduce?    | Aggregation uses predefined stages like `$group`, `$sum`, `$avg`; MapReduce allows custom JavaScript logic.                         |
+| 14       | Can MapReduce modify documents?                              | No, MapReduce is for reading and computing, not modifying data.                                                                     |
+| 15       | What are the advantages of MapReduce?                        | Handles large datasets, supports flexible logic, and performs custom aggregations.                                                  |
+
+---
+
+# ✅ **Key Points for Practical Notebook**
+
+* **MapReduce = Map + Reduce + (optional Finalize)**
+* `emit(key, value)` used to emit key-value pairs.
+* **Map:** Defines logic per document.
+* **Reduce:** Combines values per key.
+* **Finalize:** Calculates final results (like average).
+* **Out:** Stores results in a new collection.
+* **Operators used:**
+
+  * `Array.sum()` → total
+  * `Math.max.apply()` → highest
+  * `total/count` → average

@@ -1,0 +1,211 @@
+# 🧾 **Problem Statement 10 (CRUD in MongoDB)**
+
+**Collection Name:** `Social_Media`
+
+**Fields:**
+
+* `User_Id`
+* `User_Name`
+* `No_of_Posts`
+* `No_of_Friends`
+* `Friends_List` *(Array)*
+* `Interests` *(Array)*
+
+---
+
+## 💻 **Step 1: Create Database and Collection**
+
+```javascript
+use SocialDB
+db.createCollection("Social_Media")
+```
+
+---
+
+## 💻 **Step 2: Insert 20 Documents**
+
+```javascript
+db.Social_Media.insertMany([
+  { User_Id: 1, User_Name: "Rohit", No_of_Posts: 120, No_of_Friends: 8, Friends_List: ["Sneha", "Amit", "Karan", "Priya", "Neha", "Tina", "Vivek", "Riya"], Interests: ["Travel", "Music"] },
+  { User_Id: 2, User_Name: "Sneha", No_of_Posts: 95, No_of_Friends: 5, Friends_List: ["Rohit", "Karan", "Neha", "Amit", "Riya"], Interests: ["Cooking", "Movies"] },
+  { User_Id: 3, User_Name: "Amit", No_of_Posts: 200, No_of_Friends: 9, Friends_List: ["Rohit", "Sneha", "Priya", "Vivek", "Tina", "Karan", "Riya", "Neha", "Ajay"], Interests: ["Photography", "Sports"] },
+  { User_Id: 4, User_Name: "Neha", No_of_Posts: 75, No_of_Friends: 3, Friends_List: ["Sneha", "Priya", "Tina"], Interests: ["Art", "Dance"] },
+  { User_Id: 5, User_Name: "Karan", No_of_Posts: 180, No_of_Friends: 7, Friends_List: ["Rohit", "Sneha", "Amit", "Tina", "Vivek", "Riya", "Ajay"], Interests: ["Music", "Movies"] },
+  { User_Id: 6, User_Name: "Priya", No_of_Posts: 60, No_of_Friends: 4, Friends_List: ["Amit", "Neha", "Rohit", "Sneha"], Interests: ["Reading", "Art"] },
+  { User_Id: 7, User_Name: "Vivek", No_of_Posts: 250, No_of_Friends: 6, Friends_List: ["Amit", "Rohit", "Karan", "Tina", "Riya", "Ajay"], Interests: ["Gaming", "Sports"] },
+  { User_Id: 8, User_Name: "Tina", No_of_Posts: 40, No_of_Friends: 3, Friends_List: ["Neha", "Karan", "Sneha"], Interests: ["Dance", "Movies"] },
+  { User_Id: 9, User_Name: "Riya", No_of_Posts: 155, No_of_Friends: 7, Friends_List: ["Amit", "Karan", "Vivek", "Sneha", "Tina", "Rohit", "Ajay"], Interests: ["Fashion", "Travel"] },
+  { User_Id: 10, User_Name: "Ajay", No_of_Posts: 210, No_of_Friends: 8, Friends_List: ["Amit", "Karan", "Riya", "Rohit", "Sneha", "Vivek", "Priya", "Tina"], Interests: ["Movies", "Fitness"] },
+  { User_Id: 11, User_Name: "Ankit", No_of_Posts: 130, No_of_Friends: 5, Friends_List: ["Tina", "Karan", "Amit", "Rohit", "Riya"], Interests: ["Travel", "Reading"] },
+  { User_Id: 12, User_Name: "Deepa", No_of_Posts: 45, No_of_Friends: 2, Friends_List: ["Sneha", "Priya"], Interests: ["Cooking", "Dance"] },
+  { User_Id: 13, User_Name: "Rahul", No_of_Posts: 175, No_of_Friends: 6, Friends_List: ["Vivek", "Karan", "Riya", "Amit", "Neha", "Tina"], Interests: ["Fitness", "Gaming"] },
+  { User_Id: 14, User_Name: "Meena", No_of_Posts: 20, No_of_Friends: 3, Friends_List: ["Priya", "Neha", "Tina"], Interests: ["Reading", "Art"] },
+  { User_Id: 15, User_Name: "Rakesh", No_of_Posts: 80, No_of_Friends: 4, Friends_List: ["Amit", "Sneha", "Rohit", "Neha"], Interests: ["Movies", "Cooking"] },
+  { User_Id: 16, User_Name: "Pooja", No_of_Posts: 300, No_of_Friends: 9, Friends_List: ["Amit", "Riya", "Rohit", "Karan", "Priya", "Vivek", "Neha", "Tina", "Ajay"], Interests: ["Travel", "Dance"] },
+  { User_Id: 17, User_Name: "Jay", No_of_Posts: 60, No_of_Friends: 2, Friends_List: ["Priya", "Amit"], Interests: ["Gaming", "Sports"] },
+  { User_Id: 18, User_Name: "Reena", No_of_Posts: 115, No_of_Friends: 6, Friends_List: ["Neha", "Amit", "Riya", "Priya", "Karan", "Rohit"], Interests: ["Cooking", "Travel"] },
+  { User_Id: 19, User_Name: "Arjun", No_of_Posts: 90, No_of_Friends: 5, Friends_List: ["Amit", "Sneha", "Riya", "Vivek", "Priya"], Interests: ["Music", "Movies"] },
+  { User_Id: 20, User_Name: "Sanjana", No_of_Posts: 125, No_of_Friends: 8, Friends_List: ["Amit", "Riya", "Sneha", "Neha", "Vivek", "Karan", "Priya", "Rohit"], Interests: ["Dance", "Cooking"] }
+])
+```
+
+✅ **20 user documents inserted successfully.**
+
+---
+
+## 🧮 **Queries and Solutions**
+
+---
+
+### **1️⃣ List all the users in a formatted manner**
+
+```javascript
+db.Social_Media.find().pretty()
+```
+
+✅ **Explanation:**
+
+* Displays all documents in a readable (formatted) JSON layout.
+
+---
+
+### **2️⃣ Find all users having number of posts greater than 100**
+
+```javascript
+db.Social_Media.find(
+  { No_of_Posts: { $gt: 100 } },
+  { User_Name: 1, No_of_Posts: 1, _id: 0 }
+)
+```
+
+✅ **Explanation:**
+
+* `$gt` (greater than) filters users with `No_of_Posts > 100`.
+* Displays only `User_Name` and `No_of_Posts`.
+
+**Sample Output:**
+
+```json
+{ "User_Name": "Rohit", "No_of_Posts": 120 }
+{ "User_Name": "Amit", "No_of_Posts": 200 }
+{ "User_Name": "Karan", "No_of_Posts": 180 }
+{ "User_Name": "Vivek", "No_of_Posts": 250 }
+{ "User_Name": "Riya", "No_of_Posts": 155 }
+{ "User_Name": "Ajay", "No_of_Posts": 210 }
+{ "User_Name": "Pooja", "No_of_Posts": 300 }
+{ "User_Name": "Sanjana", "No_of_Posts": 125 }
+```
+
+---
+
+### **3️⃣ List the User Names and their respective Friends_List**
+
+```javascript
+db.Social_Media.find(
+  {},
+  { User_Name: 1, Friends_List: 1, _id: 0 }
+)
+```
+
+✅ **Explanation:**
+
+* Displays only the **User_Name** and their **Friends_List** fields.
+* The `{}` in find() means no condition → all users.
+
+---
+
+### **4️⃣ Display User IDs and Friends List of users who have more than 5 friends**
+
+```javascript
+db.Social_Media.find(
+  { No_of_Friends: { $gt: 5 } },
+  { User_Id: 1, Friends_List: 1, _id: 0 }
+)
+```
+
+✅ **Explanation:**
+
+* `$gt: 5` filters users with more than 5 friends.
+* Displays **User_Id** and **Friends_List** only.
+
+**Sample Output:**
+
+```json
+{ "User_Id": 1, "Friends_List": ["Sneha","Amit","Karan","Priya","Neha","Tina","Vivek","Riya"] }
+{ "User_Id": 3, "Friends_List": ["Rohit","Sneha","Priya","Vivek","Tina","Karan","Riya","Neha","Ajay"] }
+{ "User_Id": 5, "Friends_List": ["Rohit","Sneha","Amit","Tina","Vivek","Riya","Ajay"] }
+...
+```
+
+---
+
+### **5️⃣ Display all users with number of posts in descending order**
+
+```javascript
+db.Social_Media.find(
+  {},
+  { User_Name: 1, No_of_Posts: 1, _id: 0 }
+).sort({ No_of_Posts: -1 })
+```
+
+✅ **Explanation:**
+
+* `.sort({ No_of_Posts: -1 })` sorts users in descending order by number of posts.
+* Displays name and post count.
+
+**Sample Output:**
+
+```json
+{ "User_Name": "Pooja", "No_of_Posts": 300 }
+{ "User_Name": "Vivek", "No_of_Posts": 250 }
+{ "User_Name": "Ajay", "No_of_Posts": 210 }
+{ "User_Name": "Amit", "No_of_Posts": 200 }
+{ "User_Name": "Karan", "No_of_Posts": 180 }
+{ "User_Name": "Riya", "No_of_Posts": 155 }
+...
+```
+
+---
+
+## 📋 **Summary of Commands**
+
+| Task                     | Query                        | Operator Used  |
+| ------------------------ | ---------------------------- | -------------- |
+| Show all users           | `find().pretty()`            | —              |
+| Posts > 100              | `$gt`                        | Comparison     |
+| User name + Friends list | Projection                   | `{ field: 1 }` |
+| Friends > 5              | `$gt`                        | Comparison     |
+| Sort by posts            | `.sort({ No_of_Posts: -1 })` | Sorting        |
+
+---
+
+## 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                                   | **Answer**                                                                                             |
+| -------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 1        | What is a collection in MongoDB?                               | A collection is a group of MongoDB documents, similar to a table in SQL.                               |
+| 2        | What is a document in MongoDB?                                 | A document is a record in MongoDB stored in JSON-like format (key-value pairs).                        |
+| 3        | What is CRUD in MongoDB?                                       | CRUD stands for Create, Read, Update, Delete — the four basic operations on data.                      |
+| 4        | How do you insert multiple documents in MongoDB?               | Using the `insertMany()` method with an array of JSON objects.                                         |
+| 5        | What does the `$gt` operator do?                               | `$gt` means "greater than"; it filters documents where a field’s value is greater than a given number. |
+| 6        | What is the use of the `sort()` function?                      | It arranges query results in ascending (1) or descending (-1) order.                                   |
+| 7        | How can we display only specific fields in a query?            | By using projection, e.g., `{ User_Name: 1, No_of_Posts: 1, _id: 0 }`.                                 |
+| 8        | What is an array field in MongoDB?                             | It stores multiple values in a single field (like `Friends_List` or `Interests`).                      |
+| 9        | What is the purpose of `.pretty()`?                            | It displays the output in a readable, formatted structure.                                             |
+| 10       | Can MongoDB store different data types in the same collection? | Yes, MongoDB is schema-less and supports flexible document structures.                                 |
+| 11       | How can we delete a document?                                  | Using `db.collection.deleteOne()` or `db.collection.deleteMany()`.                                     |
+| 12       | How can we update a document?                                  | Using `updateOne()` or `updateMany()` with `$set` operator.                                            |
+| 13       | What is the default sort order in MongoDB?                     | Ascending order (1).                                                                                   |
+| 14       | What is the difference between `find()` and `findOne()`?       | `find()` returns all matching documents; `findOne()` returns the first match.                          |
+| 15       | What is projection in MongoDB?                                 | Selecting only specific fields to show in the output using `{ field: 1 }`.                             |
+
+---
+
+## ✅ **Key Points for Practical Notebook**
+
+* **CRUD** = Create, Read, Update, Delete.
+* **Insert data:** `insertOne()` or `insertMany()`.
+* **Filter data:** `$gt`, `$lt`, `$eq`.
+* **Projection:** `{ field: 1, _id: 0 }` shows only selected fields.
+* **Sorting:** `.sort({ field: 1 or -1 })`.
+* **Arrays:** Useful for multi-value fields (e.g., Friends_List).

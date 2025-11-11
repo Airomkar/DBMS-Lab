@@ -1,0 +1,247 @@
+## 🧾 **Problem Statement 5 (DML USING MYSQL)**
+
+### Tables:
+
+1. **Customer (CustID, Name, Cust_Address, Phone_no, Age)**
+2. **Branch (Branch_ID, Branch_Name, Address)**
+3. **Account (Account_no, Branch_ID, CustID, date_open, Account_type, Balance)**
+
+---
+
+## 💻 **Step 1: Create Database**
+
+```sql
+CREATE DATABASE BankDB;
+USE BankDB;
+```
+
+---
+
+## 💻 **Step 2: Create Tables**
+
+```sql
+CREATE TABLE Customer (
+    CustID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Cust_Address VARCHAR(100),
+    Phone_no VARCHAR(15),
+    Age INT
+);
+
+CREATE TABLE Branch (
+    Branch_ID INT PRIMARY KEY,
+    Branch_Name VARCHAR(50),
+    Address VARCHAR(100)
+);
+
+CREATE TABLE Account (
+    Account_no INT PRIMARY KEY,
+    Branch_ID INT,
+    CustID INT,
+    date_open DATE,
+    Account_type VARCHAR(30),
+    Balance DECIMAL(10,2),
+    FOREIGN KEY (Branch_ID) REFERENCES Branch(Branch_ID),
+    FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+```
+
+---
+
+## 💻 **Step 3: Insert Sample Data**
+
+```sql
+INSERT INTO Customer VALUES
+(101, 'Rohit', 'Pune', '9876543210', 42),
+(102, 'Sneha', 'Nashik', '9765432100', 28),
+(103, 'Amit', 'Pune', '9999999999', 38),
+(104, 'Karan', 'Mumbai', '9090909090', 45),
+(105, 'Priya', 'Pune', '8888888888', 33);
+
+INSERT INTO Branch VALUES
+(1, 'Main Branch', 'Pune'),
+(2, 'East Branch', 'Mumbai'),
+(3, 'North Branch', 'Nashik');
+
+INSERT INTO Account VALUES
+(2001, 1, 101, '2018-08-15', 'Saving Account', 75000),
+(2002, 2, 102, '2018-09-10', 'Current Account', 85000),
+(2003, 1, 103, '2019-01-12', 'Saving Account', 30000),
+(2004, 3, 104, '2017-07-11', 'Saving Account', 20000),
+(2005, 1, 105, '2020-05-05', 'Saving Account', 90000);
+```
+
+---
+
+## ⚙️ **Now Answer the Given Questions**
+
+---
+
+### **1️⃣ Add the column “Email_Address” in Customer table**
+
+```sql
+ALTER TABLE Customer ADD Email_Address VARCHAR(50);
+```
+
+✅ Adds a new column to store email addresses.
+
+---
+
+### **2️⃣ Change the column name “Email_Address” to “Email_ID”**
+
+```sql
+ALTER TABLE Customer CHANGE Email_Address Email_ID VARCHAR(50);
+```
+
+✅ Renames the column while keeping the same datatype.
+
+---
+
+### **3️⃣ Display the customer details with highest balance in the account**
+
+```sql
+SELECT c.*
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Balance = (SELECT MAX(Balance) FROM Account);
+```
+
+✅ Displays the customer(s) having the **maximum balance**.
+
+**Sample Output:**
+
+| CustID | Name  | Cust_Address | Phone_no   | Age | Email_ID |
+| ------ | ----- | ------------ | ---------- | --- | -------- |
+| 105    | Priya | Pune         | 8888888888 | 33  | NULL     |
+
+---
+
+### **4️⃣ Display the customer details with lowest balance for account type = “Saving Account”**
+
+```sql
+SELECT c.*
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Account_type = 'Saving Account'
+AND a.Balance = (
+    SELECT MIN(Balance)
+    FROM Account
+    WHERE Account_type = 'Saving Account'
+);
+```
+
+✅ Displays customers with the **minimum balance** among **Saving Account** holders.
+
+**Sample Output:**
+
+| CustID | Name  | Cust_Address | Phone_no   | Age | Email_ID |
+| ------ | ----- | ------------ | ---------- | --- | -------- |
+| 104    | Karan | Mumbai       | 9090909090 | 45  | NULL     |
+
+---
+
+### **5️⃣ Display customer details that live in Pune and have age greater than 35**
+
+```sql
+SELECT * FROM Customer
+WHERE Cust_Address = 'Pune' AND Age > 35;
+```
+
+✅ Filters customers based on **city = Pune** and **age > 35**.
+
+**Sample Output:**
+
+| CustID | Name  | Cust_Address | Phone_no   | Age | Email_ID |
+| ------ | ----- | ------------ | ---------- | --- | -------- |
+| 101    | Rohit | Pune         | 9876543210 | 42  | NULL     |
+| 103    | Amit  | Pune         | 9999999999 | 38  | NULL     |
+
+---
+
+### **6️⃣ Display CustID, Name, and Age in ascending order of Age**
+
+```sql
+SELECT CustID, Name, Age
+FROM Customer
+ORDER BY Age ASC;
+```
+
+✅ Sorts customers from youngest to oldest.
+
+**Sample Output:**
+
+| CustID | Name  | Age |
+| ------ | ----- | --- |
+| 105    | Priya | 33  |
+| 102    | Sneha | 28  |
+| 103    | Amit  | 38  |
+| 101    | Rohit | 42  |
+| 104    | Karan | 45  |
+
+---
+
+### **7️⃣ Display Name and Branch_ID of customers grouped by Account_type**
+
+```sql
+SELECT a.Account_type, b.Branch_ID, c.Name
+FROM Account a
+JOIN Branch b ON a.Branch_ID = b.Branch_ID
+JOIN Customer c ON a.CustID = c.CustID
+GROUP BY a.Account_type, b.Branch_ID, c.Name;
+```
+
+✅ Displays **Account_type**, **Branch_ID**, and **Customer Name**, grouped logically by account type.
+
+**Sample Output:**
+
+| Account_type    | Branch_ID | Name  |
+| --------------- | --------- | ----- |
+| Saving Account  | 1         | Rohit |
+| Saving Account  | 1         | Amit  |
+| Saving Account  | 1         | Priya |
+| Saving Account  | 3         | Karan |
+| Current Account | 2         | Sneha |
+
+---
+
+## 📋 **Summary of Commands**
+
+| Task                       | SQL Command                                                       |
+| -------------------------- | ----------------------------------------------------------------- |
+| Add column                 | `ALTER TABLE Customer ADD Email_Address VARCHAR(50);`             |
+| Rename column              | `ALTER TABLE Customer CHANGE Email_Address Email_ID VARCHAR(50);` |
+| Highest balance            | `MAX(Balance)`                                                    |
+| Lowest balance for savings | `MIN(Balance)` with condition                                     |
+| Filter by address & age    | `WHERE Cust_Address='Pune' AND Age>35`                            |
+| Sort by Age                | `ORDER BY Age ASC`                                                |
+| Group by Account type      | `GROUP BY a.Account_type`                                         |
+
+---
+
+## 🎓 **Possible Viva / Oral Questions with Answers**
+
+| **Q.No** | **Question**                                                    | **Answer**                                                                                                         |
+| -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 1        | What is DML in SQL?                                             | DML stands for Data Manipulation Language; it is used to manipulate data using INSERT, UPDATE, DELETE, and SELECT. |
+| 2        | What is the difference between DDL and DML?                     | DDL defines the structure (CREATE, ALTER, DROP), while DML manipulates the data (INSERT, UPDATE, DELETE, SELECT).  |
+| 3        | How can you add a new column in an existing table?              | Using the `ALTER TABLE ... ADD` statement.                                                                         |
+| 4        | How do you rename a column in MySQL?                            | Using the `ALTER TABLE ... CHANGE old_name new_name datatype` command.                                             |
+| 5        | What is the purpose of the JOIN clause?                         | JOIN is used to combine records from two or more tables based on related columns.                                  |
+| 6        | What is the use of GROUP BY?                                    | GROUP BY groups rows that have the same values into summary rows.                                                  |
+| 7        | How do you find the highest balance?                            | Using the aggregate function `MAX(Balance)`.                                                                       |
+| 8        | How do you find the lowest balance for a specific account type? | Using `MIN(Balance)` along with `WHERE Account_type='Saving Account'`.                                             |
+| 9        | What is ORDER BY used for?                                      | It sorts the result set in ascending or descending order.                                                          |
+| 10       | Can we use aggregate functions with GROUP BY?                   | Yes, aggregate functions like SUM, AVG, COUNT, MAX, MIN are often used with GROUP BY.                              |
+| 11       | What is a foreign key?                                          | A foreign key links one table to another, ensuring referential integrity.                                          |
+| 12       | What is the difference between WHERE and HAVING?                | WHERE filters rows before grouping; HAVING filters after grouping.                                                 |
+
+---
+
+## ✅ **Key Points for Practical Notebook**
+
+* `ALTER TABLE` — used for structure changes (add/rename columns).
+* Aggregate functions — `MAX()`, `MIN()`, `AVG()`, `COUNT()`.
+* Joins connect tables using primary and foreign keys.
+* `ORDER BY` — used for sorting results.
+* `GROUP BY` — used for aggregation.
+* DML ≠ DDL: DML changes **data**, DDL changes **structure**.

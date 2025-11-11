@@ -1,0 +1,232 @@
+# 🧾 **Problem Statement 15 (Cursors)**
+
+### Given Table:
+
+`Products(Product_id, Product_Name, Product_Type, Price)`
+
+---
+
+## 💻 **Step 1: Create Table and Insert Sample Data**
+
+```sql
+CREATE TABLE Products (
+    Product_id NUMBER PRIMARY KEY,
+    Product_Name VARCHAR2(50),
+    Product_Type VARCHAR2(30),
+    Price NUMBER(10,2)
+);
+
+INSERT INTO Products VALUES (101, 'T-Shirt', 'Apparel', 2500);
+INSERT INTO Products VALUES (102, 'Jeans', 'Apparel', 4800);
+INSERT INTO Products VALUES (103, 'Watch', 'Accessory', 7500);
+INSERT INTO Products VALUES (104, 'Shoes', 'Apparel', 6200);
+INSERT INTO Products VALUES (105, 'Bag', 'Accessory', 3500);
+INSERT INTO Products VALUES (106, 'Jacket', 'Apparel', 9000);
+INSERT INTO Products VALUES (107, 'Perfume', 'Cosmetic', 4500);
+COMMIT;
+```
+
+✅ **Sample data inserted successfully**
+
+---
+
+# 🧩 **1️⃣ Parameterized Cursor**
+
+### 💻 **Program: Display all products in given price range and type ‘Apparel’**
+
+```sql
+DECLARE
+    v_min_price Products.Price%TYPE := &min_price;
+    v_max_price Products.Price%TYPE := &max_price;
+
+    v_id Products.Product_id%TYPE;
+    v_name Products.Product_Name%TYPE;
+    v_type Products.Product_Type%TYPE;
+    v_price Products.Price%TYPE;
+
+    CURSOR product_cursor(p_min NUMBER, p_max NUMBER) IS
+        SELECT Product_id, Product_Name, Product_Type, Price
+        FROM Products
+        WHERE Product_Type = 'Apparel'
+        AND Price BETWEEN p_min AND p_max;
+
+BEGIN
+    OPEN product_cursor(v_min_price, v_max_price);
+    LOOP
+        FETCH product_cursor INTO v_id, v_name, v_type, v_price;
+        EXIT WHEN product_cursor%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('ID: ' || v_id || ' | Name: ' || v_name || 
+                             ' | Type: ' || v_type || ' | Price: ' || v_price);
+    END LOOP;
+    CLOSE product_cursor;
+END;
+/
+```
+
+---
+
+### 🧾 **Sample Execution**
+
+```
+Enter value for min_price: 2000
+Enter value for max_price: 7000
+```
+
+**Output:**
+
+```
+ID: 101 | Name: T-Shirt | Type: Apparel | Price: 2500
+ID: 102 | Name: Jeans | Type: Apparel | Price: 4800
+ID: 104 | Name: Shoes | Type: Apparel | Price: 6200
+```
+
+---
+
+### ✅ **Explanation**
+
+| Step | Description                                                       |
+| ---- | ----------------------------------------------------------------- |
+| 1    | Declared cursor `product_cursor` with parameters `(p_min, p_max)` |
+| 2    | Used `BETWEEN` to filter products within the price range.         |
+| 3    | Added condition `Product_Type = 'Apparel'`                        |
+| 4    | Used `DBMS_OUTPUT.PUT_LINE` to display product details.           |
+
+---
+
+# 🧩 **2️⃣ Explicit Cursor**
+
+### 💻 **Program: Display products with Price greater than 5000**
+
+```sql
+DECLARE
+    v_id Products.Product_id%TYPE;
+    v_name Products.Product_Name%TYPE;
+    v_type Products.Product_Type%TYPE;
+    v_price Products.Price%TYPE;
+
+    CURSOR highprice_cursor IS
+        SELECT Product_id, Product_Name, Product_Type, Price
+        FROM Products
+        WHERE Price > 5000;
+
+BEGIN
+    OPEN highprice_cursor;
+    LOOP
+        FETCH highprice_cursor INTO v_id, v_name, v_type, v_price;
+        EXIT WHEN highprice_cursor%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Product ID: ' || v_id || 
+                             ', Name: ' || v_name || 
+                             ', Type: ' || v_type || 
+                             ', Price: ' || v_price);
+    END LOOP;
+    CLOSE highprice_cursor;
+END;
+/
+```
+
+---
+
+### ✅ **Sample Output**
+
+```
+Product ID: 103, Name: Watch, Type: Accessory, Price: 7500
+Product ID: 104, Name: Shoes, Type: Apparel, Price: 6200
+Product ID: 106, Name: Jacket, Type: Apparel, Price: 9000
+```
+
+✅ **Explanation:**
+
+* Explicit cursor processes each row one by one where `Price > 5000`.
+* Uses `%NOTFOUND` to exit the loop.
+* Cursor is manually opened, fetched, and closed.
+
+---
+
+# 🧩 **3️⃣ Implicit Cursor**
+
+### 💻 **Program: Display number of records updated after increasing all product prices by 1000**
+
+```sql
+DECLARE
+    v_rows_updated NUMBER;
+BEGIN
+    UPDATE Products
+    SET Price = Price + 1000;
+
+    v_rows_updated := SQL%ROWCOUNT;
+
+    DBMS_OUTPUT.PUT_LINE('Number of Products Updated: ' || v_rows_updated);
+END;
+/
+```
+
+---
+
+### ✅ **Sample Output**
+
+```
+Number of Products Updated: 7
+```
+
+✅ **Explanation:**
+
+* Implicit cursor is automatically created for the `UPDATE` statement.
+* `SQL%ROWCOUNT` returns the number of rows affected.
+* Other implicit cursor attributes: `%FOUND`, `%NOTFOUND`, `%ISOPEN`.
+
+---
+
+# ✅ **Summary of All Three Programs**
+
+| Type                 | Cursor Name        | Purpose                                | Key Feature                            |
+| -------------------- | ------------------ | -------------------------------------- | -------------------------------------- |
+| Parameterized Cursor | `product_cursor`   | Filter by price range & type ‘Apparel’ | Accepts parameters (`p_min`, `p_max`)  |
+| Explicit Cursor      | `highprice_cursor` | Display products with Price > 5000     | Manually controlled (OPEN–FETCH–CLOSE) |
+| Implicit Cursor      | (none)             | Display number of records updated      | Automatically handled by Oracle        |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS AND ANSWERS**
+
+| **Q.No** | **Question**                                                 | **Answer**                                                                              |
+| -------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| 1        | What is a Cursor in PL/SQL?                                  | A cursor is a pointer that allows row-by-row processing of query results.               |
+| 2        | What are the types of cursors in PL/SQL?                     | Two main types: **Implicit Cursor** and **Explicit Cursor**.                            |
+| 3        | What is an Explicit Cursor?                                  | A user-defined cursor created to handle multiple rows returned by a query.              |
+| 4        | What is an Implicit Cursor?                                  | A cursor automatically created by Oracle when executing DML statements.                 |
+| 5        | What is a Parameterized Cursor?                              | A cursor that accepts parameters at runtime to filter query results.                    |
+| 6        | What is the syntax for declaring a cursor?                   | `CURSOR cursor_name IS SELECT ...;`                                                     |
+| 7        | What are cursor attributes?                                  | `%FOUND`, `%NOTFOUND`, `%ROWCOUNT`, `%ISOPEN`.                                          |
+| 8        | What does `%ROWCOUNT` do?                                    | Returns the number of rows affected by a DML statement or fetched by a cursor.          |
+| 9        | What does `%NOTFOUND` return?                                | TRUE when the last FETCH statement did not return a row.                                |
+| 10       | When do we use an explicit cursor?                           | When we need to process multiple rows from a query one at a time.                       |
+| 11       | How is a cursor opened and closed?                           | Using `OPEN cursor_name;` and `CLOSE cursor_name;`.                                     |
+| 12       | How can we pass parameters to a cursor?                      | By defining them in parentheses like `CURSOR c(p1 TYPE, p2 TYPE) IS ...`.               |
+| 13       | What is the difference between implicit and explicit cursor? | Implicit cursor is automatic; explicit cursor is user-defined and controlled manually.  |
+| 14       | What is the purpose of `SQL%ROWCOUNT`?                       | It gives the number of rows affected by the last executed SQL statement.                |
+| 15       | What are the advantages of using cursors?                    | Allows row-by-row control, precise data handling, and better logic for complex queries. |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **Cursor = Row-by-row query processing.**
+* **Implicit Cursor:** created automatically for DML.
+* **Explicit Cursor:** manually declared and controlled.
+* **Parameterized Cursor:** dynamic — takes runtime input.
+* **Important Attributes:**
+
+  * `%FOUND` → TRUE if record found.
+  * `%NOTFOUND` → TRUE if no record found.
+  * `%ROWCOUNT` → total rows affected/fetched.
+  * `%ISOPEN` → TRUE if cursor is open.
+* **Steps in Explicit Cursor:**
+  1️⃣ Declare → 2️⃣ Open → 3️⃣ Fetch → 4️⃣ Close.
+
+---
+
+✅ **Final Summary:**
+
+* You implemented all 3 types of cursors.
+* You used `BETWEEN` for price range, `>5000` for filtering, and implicit cursor for `UPDATE`.
+* You displayed both filtered results and record counts dynamically.

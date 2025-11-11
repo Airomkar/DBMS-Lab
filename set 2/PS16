@@ -1,0 +1,200 @@
+# 🧾 **Problem Statement 16 — Implement MongoDB Database Connectivity with Java**
+
+---
+
+## 🎯 **Objective:**
+
+To demonstrate how to **connect Java with MongoDB**, **insert**, **retrieve**, and **display documents** using the **MongoDB Java Driver**.
+
+---
+
+## ⚙️ **Step 1: Prerequisites**
+
+Before running the program, ensure you have:
+
+1. **MongoDB** installed and running on your system (default port `27017`).
+2. **Java JDK (version 8 or above)** installed.
+3. **MongoDB Java Driver JAR** file added to your Java project.
+   → Download from: [https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver](https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver)
+   → Example JAR: `mongo-java-driver-3.12.10.jar`
+
+---
+
+## 💻 **Step 2: Sample Java Code**
+
+### **Program Name:** `MongoDBConnection.java`
+
+```java
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+import com.mongodb.client.FindIterable;
+
+public class MongoDBConnection {
+    public static void main(String[] args) {
+        try {
+            // Step 1: Create a MongoDB client connection
+            MongoClient mongo = new MongoClient("localhost", 27017);
+
+            // Step 2: Access the database (will be created automatically if not exists)
+            MongoDatabase database = mongo.getDatabase("CollegeDB");
+            System.out.println("✅ Connected to Database: " + database.getName());
+
+            // Step 3: Create (or get) a collection
+            MongoCollection<Document> collection = database.getCollection("Student");
+            System.out.println("✅ Collection Selected: " + collection.getNamespace());
+
+            // Step 4: Insert a document
+            Document doc1 = new Document("roll_no", 101)
+                    .append("name", "Rohit")
+                    .append("class", "TE")
+                    .append("department", "Computer")
+                    .append("marks", 88);
+            collection.insertOne(doc1);
+            System.out.println("✅ Document Inserted Successfully!");
+
+            // Step 5: Retrieve (Read) all documents
+            System.out.println("\n📄 Displaying all records from Student collection:");
+            FindIterable<Document> docs = collection.find();
+            for (Document document : docs) {
+                System.out.println(document.toJson());
+            }
+
+            // Step 6: Update a document
+            collection.updateOne(new Document("roll_no", 101),
+                    new Document("$set", new Document("marks", 92)));
+            System.out.println("\n✅ Document Updated Successfully!");
+
+            // Step 7: Delete a document
+            collection.deleteOne(new Document("roll_no", 101));
+            System.out.println("✅ Document Deleted Successfully!");
+
+            // Step 8: Close the connection
+            mongo.close();
+            System.out.println("\n🔒 Connection Closed.");
+
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        }
+    }
+}
+```
+
+---
+
+## 🧾 **Sample Output:**
+
+```
+✅ Connected to Database: CollegeDB
+✅ Collection Selected: CollegeDB.Student
+✅ Document Inserted Successfully!
+
+📄 Displaying all records from Student collection:
+{"_id": {"$oid": "6732a2d6e3a7cdba51b"},
+ "roll_no": 101,
+ "name": "Rohit",
+ "class": "TE",
+ "department": "Computer",
+ "marks": 88}
+
+✅ Document Updated Successfully!
+✅ Document Deleted Successfully!
+🔒 Connection Closed.
+```
+
+---
+
+## ✅ **Explanation of Steps**
+
+| Step  | Description                                                       |
+| ----- | ----------------------------------------------------------------- |
+| **1** | Created MongoDB client using `MongoClient("localhost", 27017)`.   |
+| **2** | Accessed database `CollegeDB` using `getDatabase()`.              |
+| **3** | Accessed or created collection `Student` using `getCollection()`. |
+| **4** | Inserted a document using `insertOne()`.                          |
+| **5** | Retrieved documents using `find()`.                               |
+| **6** | Updated a record using `updateOne()`.                             |
+| **7** | Deleted a record using `deleteOne()`.                             |
+| **8** | Closed the MongoDB connection using `close()`.                    |
+
+---
+
+## 🧠 **Key MongoDB Java Driver Classes**
+
+| Class             | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| `MongoClient`     | Establishes connection to MongoDB server            |
+| `MongoDatabase`   | Represents a MongoDB database                       |
+| `MongoCollection` | Represents a collection (table) inside the database |
+| `Document`        | Represents a MongoDB document (key-value data)      |
+| `FindIterable`    | Used to iterate through query results               |
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS WITH ANSWERS**
+
+| **Q.No** | **Question**                                        | **Answer**                                                                                       |
+| -------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 1        | What is MongoDB?                                    | MongoDB is a NoSQL database that stores data in JSON-like documents (BSON format).               |
+| 2        | What is the MongoDB Java Driver?                    | It is a library that allows Java applications to connect and interact with MongoDB databases.    |
+| 3        | Which class is used to connect to MongoDB in Java?  | `MongoClient` class.                                                                             |
+| 4        | What is a Document in MongoDB?                      | A Document is a data structure in MongoDB that stores key-value pairs, similar to a JSON object. |
+| 5        | What is a Collection in MongoDB?                    | A collection is a group of documents, similar to a table in relational databases.                |
+| 6        | What are the basic CRUD operations in MongoDB?      | Create, Read, Update, and Delete.                                                                |
+| 7        | How do you insert a record in MongoDB using Java?   | Using `collection.insertOne(document)`.                                                          |
+| 8        | How can you read documents from a collection?       | Using `collection.find()` method.                                                                |
+| 9        | What is the use of `updateOne()`?                   | It updates a single document that matches the specified filter condition.                        |
+| 10       | How do you delete a document in MongoDB using Java? | Using `collection.deleteOne(new Document("key", value))`.                                        |
+| 11       | How do you close the MongoDB connection?            | Using the `mongo.close()` method.                                                                |
+| 12       | What is the difference between SQL and MongoDB?     | SQL stores data in tables (rows and columns), while MongoDB stores it in JSON-like documents.    |
+| 13       | What is BSON?                                       | BSON stands for Binary JSON — the internal storage format used by MongoDB.                       |
+| 14       | What is the default MongoDB port number?            | 27017                                                                                            |
+| 15       | What are the advantages of MongoDB?                 | Schema-less, flexible data model, high performance, and easy horizontal scaling.                 |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **Driver:** `mongo-java-driver-x.x.x.jar`
+* **Database Connection:**
+
+  ```java
+  MongoClient mongo = new MongoClient("localhost", 27017);
+  ```
+* **Access Database:**
+
+  ```java
+  MongoDatabase db = mongo.getDatabase("DBName");
+  ```
+* **Access Collection:**
+
+  ```java
+  MongoCollection<Document> coll = db.getCollection("CollectionName");
+  ```
+* **CRUD Operations:**
+
+  * Create → `insertOne()`
+  * Read → `find()`
+  * Update → `updateOne()`
+  * Delete → `deleteOne()`
+* **Document Object:**
+
+  ```java
+  new Document("key", value)
+  ```
+* **Close Connection:** `mongo.close()`
+
+---
+
+# ✅ **Summary**
+
+| Operation | MongoDB Java Code                     | Description               |
+| --------- | ------------------------------------- | ------------------------- |
+| Connect   | `new MongoClient("localhost", 27017)` | Establishes connection    |
+| Insert    | `collection.insertOne(doc)`           | Adds new document         |
+| Read      | `collection.find()`                   | Displays all documents    |
+| Update    | `collection.updateOne()`              | Modifies existing data    |
+| Delete    | `collection.deleteOne()`              | Deletes matching document |
+| Close     | `mongo.close()`                       | Ends connection           |

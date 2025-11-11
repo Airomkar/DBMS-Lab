@@ -1,0 +1,207 @@
+# 🧾 **Problem Statement 6 (Procedures / Functions)**
+
+### Given Schema:
+
+**Employee(emp_id, dept_id, emp_name, DoJ, salary, commission, job_title)**
+
+---
+
+## ⚙️ **PART 1 – Stored Procedure**
+
+### ✅ **Objective:**
+
+Write a **stored procedure** to record employee commissions based on the following rules:
+
+| Condition                                | Commission % |
+| ---------------------------------------- | ------------ |
+| Salary > 10000                           | 0.40%        |
+| Salary < 10000 AND Experience > 10 years | 0.35%        |
+| Salary < 3000                            | 0.25%        |
+| Otherwise                                | 0.15%        |
+
+*(Experience = Years between current date and Date of Joining)*
+
+---
+
+### 💻 **Stored Procedure Code:**
+
+```sql
+CREATE OR REPLACE PROCEDURE calc_commission(p_emp_id IN Employee.emp_id%TYPE)
+IS
+    v_salary       Employee.salary%TYPE;
+    v_doj          Employee.DoJ%TYPE;
+    v_experience   NUMBER;
+    v_commission   NUMBER;
+
+BEGIN
+    -- Fetch current salary and date of joining
+    SELECT salary, DoJ INTO v_salary, v_doj
+    FROM Employee
+    WHERE emp_id = p_emp_id;
+
+    -- Calculate experience in years
+    v_experience := FLOOR(MONTHS_BETWEEN(SYSDATE, v_doj) / 12);
+
+    -- Apply commission logic
+    IF v_salary > 10000 THEN
+        v_commission := v_salary * 0.004;       -- 0.4%
+    ELSIF v_salary < 10000 AND v_experience > 10 THEN
+        v_commission := v_salary * 0.0035;      -- 0.35%
+    ELSIF v_salary < 3000 THEN
+        v_commission := v_salary * 0.0025;      -- 0.25%
+    ELSE
+        v_commission := v_salary * 0.0015;      -- 0.15%
+    END IF;
+
+    -- Update the employee record
+    UPDATE Employee
+    SET commission = v_commission
+    WHERE emp_id = p_emp_id;
+
+    DBMS_OUTPUT.PUT_LINE('Commission Updated for Employee ID: ' || p_emp_id);
+    DBMS_OUTPUT.PUT_LINE('Experience: ' || v_experience || ' years');
+    DBMS_OUTPUT.PUT_LINE('Salary: ' || v_salary);
+    DBMS_OUTPUT.PUT_LINE('Commission: ' || v_commission);
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Employee not found!');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Unexpected error occurred!');
+END;
+/
+```
+
+---
+
+### ▶️ **Execution:**
+
+```sql
+EXEC calc_commission(101);
+```
+
+✅ **Output Example:**
+
+```
+Commission Updated for Employee ID: 101
+Experience: 8 years
+Salary: 9500
+Commission: 33.25
+```
+
+---
+
+### ✅ **Sample Employee Table**
+
+| emp_id | dept_id | emp_name | DoJ         | salary | commission | job_title |
+| ------ | ------- | -------- | ----------- | ------ | ---------- | --------- |
+| 101    | 10      | Rohit    | 15-JUL-2015 | 9500   | NULL       | Developer |
+| 102    | 11      | Sneha    | 10-APR-2010 | 12000  | NULL       | Analyst   |
+| 103    | 10      | Karan    | 01-JAN-2018 | 2800   | NULL       | Clerk     |
+
+After running the procedure, the **commission column gets updated**.
+
+---
+
+## ⚙️ **PART 2 – PLSQL Function**
+
+### ✅ **Objective:**
+
+Write a **function** that accepts a **department ID** and returns the **name of the manager** of that department.
+
+---
+
+### 💻 **PL/SQL Function Code:**
+
+```sql
+CREATE OR REPLACE FUNCTION get_manager_name(p_dept_id IN Employee.dept_id%TYPE)
+RETURN VARCHAR2
+IS
+    v_manager_name Employee.emp_name%TYPE;
+
+BEGIN
+    SELECT emp_name
+    INTO v_manager_name
+    FROM Employee
+    WHERE dept_id = p_dept_id
+      AND LOWER(job_title) = 'manager';
+
+    RETURN v_manager_name;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 'Manager not found for this department';
+    WHEN OTHERS THEN
+        RETURN 'Error occurred while fetching manager name';
+END;
+/
+```
+
+---
+
+### ▶️ **Execution:**
+
+```sql
+SELECT get_manager_name(10) AS "Manager Name" FROM dual;
+```
+
+**Output Example:**
+
+```
+Manager Name
+-------------
+Amit Shah
+```
+
+---
+
+### ✅ **Explanation**
+
+| Step  | Description                                                                |
+| ----- | -------------------------------------------------------------------------- |
+| **1** | The function takes `dept_id` as input.                                     |
+| **2** | It searches the Employee table for a record where `job_title = 'Manager'`. |
+| **3** | Returns the `emp_name` of that manager.                                    |
+| **4** | If no manager exists, it returns a friendly message.                       |
+
+---
+
+## 🧠 **Summary of Both Programs**
+
+| Task                 | Type      | Input   | Output                    | Key Logic                           |
+| -------------------- | --------- | ------- | ------------------------- | ----------------------------------- |
+| Calculate commission | Procedure | emp_id  | Updates commission column | Uses salary & experience conditions |
+| Get manager name     | Function  | dept_id | Returns emp_name          | Finds manager by department         |
+
+---
+
+## 🎓 **Viva / Oral Questions and Answers**
+
+| **Q.No** | **Question**                                                               | **Answer**                                                                                                                                           |
+| -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | What is a Stored Procedure in PL/SQL?                                      | A stored procedure is a named PL/SQL block that performs a specific task and can be executed later using `EXEC` or `CALL`.                           |
+| 2        | What is the difference between a Procedure and a Function?                 | A **procedure** performs an action and doesn’t return a value directly, while a **function** returns a single value.                                 |
+| 3        | How do you execute a procedure?                                            | Using `EXEC procedure_name(parameter_value);`                                                                                                        |
+| 4        | How do you execute a function?                                             | Using it inside a `SELECT` statement or assignment, e.g., `SELECT function_name(value) FROM dual;`                                                   |
+| 5        | What is the use of `RETURN` in a function?                                 | It sends back a value to the calling environment.                                                                                                    |
+| 6        | How do you calculate experience in years from DoJ?                         | Using `FLOOR(MONTHS_BETWEEN(SYSDATE, DoJ)/12)`                                                                                                       |
+| 7        | What is the use of the `NO_DATA_FOUND` exception?                          | It handles the error when a SELECT statement returns no rows.                                                                                        |
+| 8        | Can a function modify a database table?                                    | Generally, functions should **not** modify data — they are mainly for computation, though technically possible with `PRAGMA AUTONOMOUS_TRANSACTION`. |
+| 9        | What is the difference between user-defined and system-defined exceptions? | User-defined exceptions are declared by the programmer, while system-defined exceptions are predefined by Oracle (like `NO_DATA_FOUND`).             |
+| 10       | What is the default return type of a procedure?                            | A procedure does **not** return a value — only a function has a return type.                                                                         |
+| 11       | What is `DBMS_OUTPUT.PUT_LINE` used for?                                   | It displays output messages to the console in SQL*Plus or SQL Developer.                                                                             |
+| 12       | Why do we use `MONTHS_BETWEEN()`?                                          | It calculates the number of months between two dates — useful for age or experience calculations.                                                    |
+
+---
+
+## ✅ **Key Points to Remember**
+
+* **Procedure:** Performs task, may update tables, doesn’t return a value.
+* **Function:** Always returns a value.
+* **Experience Formula:** `FLOOR(MONTHS_BETWEEN(SYSDATE, DoJ)/12)`
+* **Exception Handling:** `NO_DATA_FOUND`, `OTHERS`.
+* **Commission Logic:** Based on salary and years of experience.
+* **Execution:**
+
+  * Procedure → `EXEC proc_name(value);`
+  * Function → `SELECT func_name(value) FROM dual;`

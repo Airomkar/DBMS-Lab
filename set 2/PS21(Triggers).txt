@@ -1,0 +1,249 @@
+# 🧾 **Problem Statement 21 (Triggers)**
+
+---
+
+## 🎯 **Objective:**
+
+1. To create a trigger that **records salary changes** of employees into a backup table.
+2. To create another trigger that **prevents deletion** of the employee whose designation is **‘CEO’**.
+
+---
+
+## 💻 **Step 1: Create Required Tables**
+
+```sql
+CREATE TABLE Employee (
+    emp_id NUMBER PRIMARY KEY,
+    emp_name VARCHAR2(50),
+    salary NUMBER(10,2),
+    designation VARCHAR2(50)
+);
+
+CREATE TABLE Salary_Backup (
+    emp_id NUMBER,
+    old_salary NUMBER(10,2),
+    new_salary NUMBER(10,2),
+    salary_difference NUMBER(10,2)
+);
+```
+
+---
+
+## 💻 **Step 2: Insert Sample Data**
+
+```sql
+INSERT INTO Employee VALUES (101, 'Rohit', 50000, 'Developer');
+INSERT INTO Employee VALUES (102, 'Sneha', 60000, 'Manager');
+INSERT INTO Employee VALUES (103, 'Amit', 150000, 'CEO');
+INSERT INTO Employee VALUES (104, 'Priya', 45000, 'Tester');
+COMMIT;
+```
+
+✅ **4 employees inserted successfully.**
+
+---
+
+# 🧩 **1️⃣ Trigger — Record Salary Change**
+
+### 💻 **Trigger Code**
+
+```sql
+CREATE OR REPLACE TRIGGER trg_salary_change
+AFTER UPDATE OF salary ON Employee
+FOR EACH ROW
+BEGIN
+    INSERT INTO Salary_Backup (emp_id, old_salary, new_salary, salary_difference)
+    VALUES (
+        :OLD.emp_id,
+        :OLD.salary,
+        :NEW.salary,
+        :NEW.salary - :OLD.salary
+    );
+END;
+/
+```
+
+---
+
+### ✅ **Explanation**
+
+| Step  | Description                                                                        |
+| ----- | ---------------------------------------------------------------------------------- |
+| **1** | The trigger fires **AFTER UPDATE** of the `salary` column in the `Employee` table. |
+| **2** | It uses `:OLD` and `:NEW` pseudo-records to get the old and new salary values.     |
+| **3** | Calculates the **difference** (`:NEW.salary - :OLD.salary`).                       |
+| **4** | Inserts the change details into the `Salary_Backup` table.                         |
+
+---
+
+### 💻 **Test the Trigger**
+
+```sql
+UPDATE Employee
+SET salary = 55000
+WHERE emp_id = 101;
+```
+
+✅ **Output:**
+
+```
+1 row updated.
+```
+
+Now check the `Salary_Backup` table:
+
+```sql
+SELECT * FROM Salary_Backup;
+```
+
+**Output:**
+
+| emp_id | old_salary | new_salary | salary_difference |
+| ------ | ---------- | ---------- | ----------------- |
+| 101    | 50000      | 55000      | 5000              |
+
+✅ **Trigger successfully recorded the salary update.**
+
+---
+
+# 🧩 **2️⃣ Trigger — Prevent Deletion of CEO Record**
+
+### 💻 **Trigger Code**
+
+```sql
+CREATE OR REPLACE TRIGGER trg_prevent_ceo_delete
+BEFORE DELETE ON Employee
+FOR EACH ROW
+BEGIN
+    IF :OLD.designation = 'CEO' THEN
+        RAISE_APPLICATION_ERROR(-20001, '❌ Deletion of CEO record is not allowed!');
+    END IF;
+END;
+/
+```
+
+---
+
+### ✅ **Explanation**
+
+| Step  | Description                                                                        |
+| ----- | ---------------------------------------------------------------------------------- |
+| **1** | This is a **BEFORE DELETE** trigger.                                               |
+| **2** | It checks if the designation of the record being deleted is `CEO`.                 |
+| **3** | If true, raises an error using `RAISE_APPLICATION_ERROR()`, preventing the delete. |
+
+---
+
+### 💻 **Test the Trigger**
+
+**Attempt to delete the CEO:**
+
+```sql
+DELETE FROM Employee WHERE designation = 'CEO';
+```
+
+**Output:**
+
+```
+ORA-20001: ❌ Deletion of CEO record is not allowed!
+ORA-06512: at "TRG_PREVENT_CEO_DELETE", line 3
+```
+
+✅ **Deletion prevented successfully.**
+
+**Try deleting another employee:**
+
+```sql
+DELETE FROM Employee WHERE emp_id = 101;
+```
+
+**Output:**
+
+```
+1 row deleted.
+```
+
+✅ **Other records can be deleted normally.**
+
+---
+
+# ✅ **Summary of Triggers**
+
+| Trigger Name             | Type      | Timing        | Event              | Purpose                                    |
+| ------------------------ | --------- | ------------- | ------------------ | ------------------------------------------ |
+| `trg_salary_change`      | Row-level | AFTER UPDATE  | On `salary` column | Stores old & new salary in `Salary_Backup` |
+| `trg_prevent_ceo_delete` | Row-level | BEFORE DELETE | On all rows        | Prevents deletion of CEO record            |
+
+---
+
+# 🧠 **How the Triggers Work**
+
+### 🔹 **Trigger 1 Flow (AFTER UPDATE)**
+
+```
+UPDATE Employee → Trigger fires → Reads :OLD and :NEW salary → 
+Calculates difference → Inserts record into Salary_Backup
+```
+
+### 🔹 **Trigger 2 Flow (BEFORE DELETE)**
+
+```
+DELETE Employee → Trigger fires → Checks designation = 'CEO' → 
+If true → Raises error → Prevents deletion
+```
+
+---
+
+# 🎓 **VIVA / ORAL QUESTIONS AND ANSWERS**
+
+| **Q.No** | **Question**                                              | **Answer**                                                                                                          |
+| -------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 1        | What is a Trigger in PL/SQL?                              | A Trigger is a stored program that automatically executes in response to a database event (INSERT, UPDATE, DELETE). |
+| 2        | What are the types of Triggers based on timing?           | BEFORE Trigger and AFTER Trigger.                                                                                   |
+| 3        | What are the types of Triggers based on level?            | Row-level and Statement-level triggers.                                                                             |
+| 4        | What is the difference between BEFORE and AFTER triggers? | BEFORE trigger executes before the DML statement; AFTER trigger executes after the DML operation.                   |
+| 5        | What are `:OLD` and `:NEW` in Triggers?                   | They are pseudo-records used to access old (before change) and new (after change) values of a column.               |
+| 6        | Which pseudo-record is available in DELETE triggers?      | Only `:OLD`, since deleted rows do not have new values.                                                             |
+| 7        | What is `RAISE_APPLICATION_ERROR()` used for?             | It raises a user-defined error and stops further execution of the DML operation.                                    |
+| 8        | Can we create multiple triggers on the same table?        | Yes, multiple triggers can be created for different events or timing (INSERT, UPDATE, DELETE).                      |
+| 9        | Can triggers call procedures or functions?                | Yes, triggers can call stored procedures or functions inside them.                                                  |
+| 10       | What is the purpose of the `Salary_Backup` table?         | To store a history of salary changes (old, new, and difference).                                                    |
+| 11       | What happens if salary is decreased instead of increased? | The trigger still records the change; difference will be negative.                                                  |
+| 12       | What is the advantage of using triggers?                  | Automates auditing, enforces data integrity, and ensures business rules.                                            |
+| 13       | Can a trigger be disabled temporarily?                    | Yes, using `ALTER TRIGGER trigger_name DISABLE`.                                                                    |
+| 14       | Can a trigger be dropped?                                 | Yes, using `DROP TRIGGER trigger_name;`.                                                                            |
+| 15       | What is the difference between a Procedure and a Trigger? | A procedure is invoked manually; a trigger runs automatically on a database event.                                  |
+
+---
+
+# 🧠 **Key Points for Practical Notebook**
+
+* **Trigger Syntax:**
+
+  ```sql
+  CREATE OR REPLACE TRIGGER trigger_name
+  BEFORE | AFTER [INSERT | UPDATE | DELETE] ON table_name
+  FOR EACH ROW
+  BEGIN
+      -- Code
+  END;
+  ```
+* **Pseudo-records:**
+
+  * `:OLD` → Value before the DML operation
+  * `:NEW` → Value after the DML operation
+* **Trigger Events:**
+
+  * INSERT → only `:NEW`
+  * UPDATE → both `:OLD` and `:NEW`
+  * DELETE → only `:OLD`
+* **Error Handling:** `RAISE_APPLICATION_ERROR(error_code, message)`
+  Example: `RAISE_APPLICATION_ERROR(-20001, 'Record cannot be deleted');`
+
+---
+
+✅ **Final Summary:**
+
+* **Trigger 1:** Records salary change into `Salary_Backup`.
+* **Trigger 2:** Prevents deletion of employee with designation ‘CEO’.
+* Demonstrated **AFTER UPDATE** and **BEFORE DELETE** triggers with proper error handling.

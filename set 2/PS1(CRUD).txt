@@ -1,0 +1,128 @@
+ Problem Statement 1 (CRUD) -- 
+                     Create collection Student with fields as Roll_No, Name, Class, Marks, Address, Enrolled_Courses. 
+                    (Hint: One student can enrol in multiple courses. Use Array to store the names of courses enrolled) 
+                    I nsert 10 documents in the collection Student. Write the queries for following. 
+                    1. List the names of students who have enrolled in the course “DBMS”, “TOC”. 
+                    2. List the Roll numbers and class of students who have marks more than 50 or class as TE. 
+                    3. Update the entire record of roll_no A10. 
+                    4. Display the names of students having 3rd and 4th highest marks. 
+                    5. Delete the records of students having marks less than 20. 
+                    6. Delete only first record from the collection.
+
+**Create collection: `Student`**
+
+Fields:
+
+* Roll_No
+* Name
+* Class
+* Marks
+* Address
+* Enrolled_Courses (Array — because one student can have multiple courses)
+
+Step-by-Step MongoDB Code
+
+1️⃣ Create Database & Collection
+
+use college
+
+db.createCollection("Student")
+
+2️⃣ Insert 10 Documents
+
+db.Student.insertMany([
+  { Roll_No: "A01", Name: "Rohit", Class: "SE", Marks: 65, Address: "Pune", Enrolled_Courses: ["DBMS", "TOC"] },
+  { Roll_No: "A02", Name: "Sneha", Class: "TE", Marks: 80, Address: "Mumbai", Enrolled_Courses: ["OS", "AI"] },
+  { Roll_No: "A03", Name: "Amit", Class: "BE", Marks: 45, Address: "Nagpur", Enrolled_Courses: ["DBMS", "CN"] },
+  { Roll_No: "A04", Name: "Neha", Class: "SE", Marks: 90, Address: "Nashik", Enrolled_Courses: ["TOC", "DBMS", "OS"] },
+  { Roll_No: "A05", Name: "Karan", Class: "TE", Marks: 25, Address: "Kolhapur", Enrolled_Courses: ["CN", "DBMS"] },
+  { Roll_No: "A06", Name: "Priya", Class: "BE", Marks: 55, Address: "Solapur", Enrolled_Courses: ["AI", "TOC"] },
+  { Roll_No: "A07", Name: "Vivek", Class: "TE", Marks: 15, Address: "Satara", Enrolled_Courses: ["OS", "CN"] },
+  { Roll_No: "A08", Name: "Tina", Class: "SE", Marks: 72, Address: "Latur", Enrolled_Courses: ["DBMS", "OS"] },
+  { Roll_No: "A09", Name: "Riya", Class: "BE", Marks: 95, Address: "Pune", Enrolled_Courses: ["TOC", "AI", "DBMS"] },
+  { Roll_No: "A10", Name: "Arjun", Class: "TE", Marks: 35, Address: "Thane", Enrolled_Courses: ["CN", "OS"] }
+])
+
+🔍 Queries
+
+1️⃣ List the names of students who have enrolled in the course “DBMS”, “TOC”.
+
+
+db.Student.find(
+  { Enrolled_Courses: { $all: ["DBMS", "TOC"] } },
+  { Name: 1, _id: 0 }
+)
+
+**Explanation:**
+`$all` ensures both “DBMS” and “TOC” are present in the array.
+
+---
+
+2️⃣ List the Roll numbers and class of students who have marks more than 50 **or** class as TE.
+
+
+db.Student.find(
+  { $or: [ { Marks: { $gt: 50 } }, { Class: "TE" } ] },
+  { Roll_No: 1, Class: 1, _id: 0 }
+)
+
+**Explanation:**
+`$or` operator combines both conditions — Marks > 50 **or** Class = TE.
+
+3️⃣ Update the entire record of roll_no "A10".
+
+db.Student.updateOne(
+  { Roll_No: "A10" },
+  { $set: { Name: "Arjun Patil", Class: "BE", Marks: 60, Address: "Pune", Enrolled_Courses: ["DBMS", "AI"] } }
+)
+
+**Explanation:**
+`$set` replaces old field values with the new record data.
+
+4️⃣ Display the names of students having 3rd and 4th highest marks.
+
+db.Student.find({}, { Name: 1, Marks: 1, _id: 0 })
+  .sort({ Marks: -1 })
+  .skip(2)
+  .limit(2)
+
+**Explanation:**
+
+* `sort({ Marks: -1 })` → sorts in descending order.
+* `skip(2)` → skips top 2 (highest, 2nd highest).
+* `limit(2)` → shows next 2 (3rd and 4th highest).
+
+5️⃣ Delete the records of students having marks less than 20.
+
+db.Student.deleteMany({ Marks: { $lt: 20 } })
+
+**Explanation:**
+Deletes all students whose marks are below 20.
+
+6️⃣ Delete only first record from the collection.
+
+db.Student.deleteOne({})
+
+**Explanation:**
+`deleteOne({})` deletes **one random document**, typically the first one inserted.
+
+✅ **Expected Output (Sample)**
+
+After performing these operations, the `Student` collection will contain updated, filtered, or reduced data as per above queries.
+
+---
+
+## 🎓 **Possible Viva (Oral) Questions with Answers**
+
+| **Q.No** | **Question**                                                     | **Answer**                                                                                            |
+| -------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 1        | What is CRUD in MongoDB?                                         | CRUD stands for Create, Read, Update, Delete — the basic operations for managing data in a database.  |
+| 2        | How do you insert multiple documents in MongoDB?                 | Using `insertMany()` method with an array of JSON documents.                                          |
+| 3        | What is the purpose of `$all` operator?                          | `$all` checks if an array contains **all** the specified elements.                                    |
+| 4        | What does `$or` operator do?                                     | `$or` is used to filter documents that satisfy at least one of multiple given conditions.             |
+| 5        | What is the use of `$set` in an update query?                    | `$set` updates specific fields in a document without replacing the entire document.                   |
+| 6        | How can we find top N highest marks?                             | Sort in descending order and use `limit(N)` — e.g., `sort({Marks:-1}).limit(3)`.                      |
+| 7        | What does `skip()` and `limit()` do?                             | `skip()` ignores a given number of documents; `limit()` restricts the number of documents returned.   |
+| 8        | How do you delete records based on a condition?                  | Using `deleteMany({ condition })`.                                                                    |
+| 9        | What is the difference between `deleteOne()` and `deleteMany()`? | `deleteOne()` removes a single document; `deleteMany()` removes all documents matching the condition. |
+| 10       | What datatype is used for multiple course names?                 | **Array** — because it can store multiple values in a single field.                                   |
